@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="us-ascii"?>
+
+
+<experiment>
+
+	<!-- removed seed="1008" from variables, seed="7461441196144289543" seed="-5156850241654287902"-->
+	<variables  PROJECT="com.github.biorobaw.scs_models.openreplay_f2021" numActions="8"
+		certainty_threshold="1"
+		wall_bias_method="0"
+	/>
+	
+	
+	<!-- DisplaySwing vs DisplayNone vs DisplayJavaFX -->
+	<display class="$(SCS).gui.displays.DisplayJavaFX"
+		window="-2,-2,4,4" syncDisplay="false" width="1280" height="720" record="false"/>
+		
+	<simulator
+		class="$(SCS).simulation.scs_simulator.SCSSimulator"
+		simulation_step_ms="30" simulation_speed="15" pause="false"/> <!-- max speed = 15 -->
+
+	<maze class="$(SCS).maze.Maze"
+		  file="$(mazeFile)" />
+
+
+	<!--  obstacle bias methods:
+				0 = no obstacle bias
+				1 = obstacles provide reinforcement signal
+				2 = taxic bias using distance as priority
+	  -->
+	<template id="model" class="$(PROJECT).model.ReplayModel"
+		load_model="false"
+		numActions="$(numActions)" 
+		mazeWidth="2.2"
+		mazeHeight="3.0"
+		
+		pc_files="$(pc_files)"
+		pcSizes="$(pcSizes)"
+		minX="$(minX)"
+		maxX="$(maxX)"
+		numX="$(numX)"
+		minY="$(minY)"
+		maxY="$(maxY)"
+		numY="$(numY)"
+		v_traces="$(traces)"
+		q_traces="$(traces)"
+    	pc_bin_size="0.04"  
+		
+		discountFactor="0.95"
+		v_learningRate="0.7,0.7,0.7"
+		q_learningRate="0.7,0.7,0.7"
+		foodReward="1.0"
+		
+		wall_bias_method="$(wall_bias_method)"
+		wall_detection_distance="2"
+		wall_reached_distance="0.1"
+		wall_reward="0.1"
+		wall_selection_weights="1, 1, 1, 1, 1, 1"
+		
+		certainty_threshold="$(certainty_threshold)"
+
+	/> <!-- discount factor 0.99, learning rate 0.7 -->
+
+	<template id="robot"
+			  class="$(SCS).robot.Robot">
+		<robot_proxy class="$(SCS).robot.proxies.SCSRobotProxy"/>
+		<module class="$(SCS).robot.modules.localization.GlobalLocalization"/>
+		<module class="$(SCS).robot.modules.FeederModule" 
+				max_feeding_distance="0.1"/><!-- feeding distance is optional, defaults to 0.1m -->	
+		<module class="$(SCS).robot.modules.distance_sensing.SCSWallDistanceSensors"
+			 	num_sensors="$(numActions)"/>  
+	</template>
+
+	<groups>
+		<g1 trials="t1">
+			<sub_1 template="model" >
+					   <robot template="robot"/>
+			</sub_1>
+		</g1>
+	</groups>
+	
+	
+	<trial id="t1" numEpisodes="$(numEpisodes)">
+		<episodeTasks>
+			<t1 class="$(SCS).tasks.episode.feeders.SetFoodAllFeeders" />
+			<init_pos class="$(PROJECT).tasks.SetInitialPosition" subject_id="sub_1" />
+			<log_sub_1 class = "$(PROJECT).tasks.LogData" subject_id="sub_1"/>
+		</episodeTasks>
+		<cycleTasks>
+			<!-- the name of task nodes does not matter, you can name them however you wish -->
+			<logLastPaths class="$(PROJECT).tasks.LogLastPaths" subject_id="sub_1"/>
+			<maxCyclesCondition class="$(SCS).tasks.cycle.condition.MaxCycles"
+								cycles="4000"/> 
+			<noFoodLeftCondition class="$(SCS).tasks.cycle.condition.food.NoFoodLeft" /> 
+		</cycleTasks>
+	</trial>
+
+
+</experiment>

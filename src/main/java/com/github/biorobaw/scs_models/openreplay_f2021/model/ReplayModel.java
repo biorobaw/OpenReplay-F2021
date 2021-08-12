@@ -27,6 +27,7 @@ import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.Pla
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.QTraces;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.c_rl.ObstacleBiases;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.d_action.MotionBias;
+import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.e_replay.ReplayMatrix;
 
 public class ReplayModel extends Subject{
 	
@@ -57,9 +58,13 @@ public class ReplayModel extends Subject{
 	// Model Variables: state
 	public PlaceCells[] pcs;
 	public PlaceCellBins[] pc_bins;
-	
+
+	public ReplayMatrix rmatrix;
+
 	public EligibilityTraces[] vTraces;
 	public QTraces[] qTraces;
+
+	public ReplayMatrix rm;
 	
 	// Model Variables: RL
 	public float[][] vTable;	// v[layer][pc]
@@ -108,16 +113,18 @@ public class ReplayModel extends Subject{
 		
 		// ======== MODEL STATE =======================
 		
+		// Initilizes Place Cells
 		var pc_bin_size  = xml.getFloatAttribute("pc_bin_size");
 		pcs = PlaceCells.load(xml);	
 		num_layers = pcs.length;
-		
+
+		// Initilizes Place Cell Bins
 		pc_bins = new PlaceCellBins[num_layers];
 		for(int i=0; i<num_layers; i++)
 			pc_bins[i] = new PlaceCellBins(pcs[i], pc_bin_size);
-	
 		
-		
+		// Initilizes Replay Matrix
+		rmatrix = new ReplayMatrix(pcs);
 		// ======== TRACES =============================
 		
 		v_traceDecay = xml.getFloatArrayAttribute("v_traces");
@@ -134,13 +141,6 @@ public class ReplayModel extends Subject{
 
 		//  create traces
 		for(int i=0; i<num_layers; i++) {
-			// choose min trace threshold (traces below the threshold are set to 0)
-//			float v_min = (float)Math.pow(v_traceDecay[i], 3) / average_active_pcs;
-//			float q_min = (float)Math.pow(q_traceDecay[i], 3) / average_active_pcs;
-//			System.out.println("min activation layer "+ i + " : " + v_min);
-
-//			vTraces[i] = new EligibilityTraces(1, pcs[i].num_cells, v_traceDecay[i], v_min);
-//			qTraces[i] = new QTraces(numActions, pcs[i].num_cells, q_traceDecay[i], q_min);
 			
 			vTraces[i] = new EligibilityTraces(1, pcs[i].num_cells, v_traceDecay[i], 0.0001f);
 			qTraces[i] = new QTraces(numActions, pcs[i].num_cells, q_traceDecay[i], 0.0001f);
@@ -224,29 +224,6 @@ public class ReplayModel extends Subject{
 	public long runModel() {
 		cycles++;
 		
-		
-		// ==================== DEBUG =================================
-		
-//		int debug_episode = 80000;
-//		long debug_cycle  = 7;
-//		int episode = (Integer)Experiment.get().getGlobal("episode");
-//		long cycle = (Long)Experiment.get().getGlobal("cycle");
-//		
-//		boolean is_debug_episode =  episode == debug_episode;
-//		boolean is_debug_cycle = is_debug_episode &&  cycle == debug_cycle;
-//		boolean is_above_debug_cycle = is_debug_episode && cycle >= debug_cycle;
-
-//		if(is_debug_cycle) {
-//				SimulationControl.togglePause();
-//			}
-//		int a =1;
-//		while(a!=0);
-		
-//		System.out.println("cycle: " + cycles);
-
-		
-		// ================= END DEBUG =================================
-		
 		tics[tics.length-1] = Debug.tic();
 		
 		
@@ -278,45 +255,18 @@ public class ReplayModel extends Subject{
 		for(int i=0; i<num_layers; i++) 
 			totalActivity+=pc_bins[i].activateBin((float)pos.getX(), (float)pos.getY());
 		for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+		// Records Place Cell Activation
+		for(int i=0; i<num_layers; i++) pcs[i].activate((float)pos.getX(), (float)pos.getY());
 		tocs[1] = Debug.toc(tics[1]);
-		
-		// DEBUG BLOCK
-		
-//		if(reward>0) {
-//			
-//			var old_value = ((SCSDisplay)Experiment.get().display).setSync(true);
-//			Experiment.get().display.updateData();
-//			Experiment.get().display.repaint();
-//			((SCSDisplay)Experiment.get().display).setSync(old_value);
-//			SimulationControl.setPause(true);
-//		}
 
-		//		if(is_above_debug_cycle) {
-//			
-//			System.out.println("Traces");
-//			var traces = vTraces[0].traces[0];
-//			var non_zero = vTraces[0].non_zero[0];
-//			for(var id : non_zero ) {
-//				System.out.println(id + " : " + String.format("%.3f",traces[id]));
-//			}
-//			
-//			var pcs = pc_bins[0].active_pcs;
-//			System.out.println("PC (ns,vs): ");
-//			float debug_bootstrap = 0;
-//			for(int j=0; j<pcs.num_cells; j++ ) {
-//				System.out.println(pcs.ids[j] + 
-//						" : "   + String.format("%.3f", pcs.ns[j]) 
-//						+ ","   + String.format("%.3f", vTable[0][pcs.ids[j]]));
-//				debug_bootstrap+= vTable[0][pcs.ids[j]] * pcs.ns[j];
-//			}
-//			System.out.println("bootstrap: " + debug_bootstrap);
-//			System.out.println();
-//						
-//		}
 		
 		tics[2] = Debug.tic();
 		// If not initial cycle, update state and action values
-		if(oldStateValue!=null) {			
+		if(oldStateValue!=null) {
+
+			// compute path matrix
+			rmatrix.update(pcs);
+
 			// calculate bootstraps
 			float bootstrap = reward;
 			if(reward==0 ) {
@@ -334,11 +284,7 @@ public class ReplayModel extends Subject{
 			// calculate rl error
 			float error = bootstrap - oldStateValue;
 			
-			// update RL
-			// DEBUG CODE BLOCK
-//			boolean toggle_pause = false;
-//			int 	cell_id;
-//			float 	maxDV = 0;;
+
 			
 			for(int i=0; i<num_layers; i++) {
 				// update V
@@ -346,12 +292,7 @@ public class ReplayModel extends Subject{
 				if(actionWasOptimal || error >0  || true) {
 					var traces = vTraces[i].traces[0];
 					for(var id : vTraces[i].non_zero[0]) {
-						// DEBUG CODE BLOCK
-//						if(Math.abs(error*v_learningRate[i]*traces[id]) > 1) {
-//							toggle_pause = true;
-//							maxDV = error*v_learningRate[i]*traces[id];
-//							System.out.println(id + " " + traces[id] + " " + error + " " + v_learningRate[i]);
-//						}
+
 						vTable[i][id]+=  error*v_learningRate[i]*traces[id];
 					}
 				}
@@ -365,11 +306,7 @@ public class ReplayModel extends Subject{
 				}
 			}
 	
-			// DEBUG CODE BLOCK
-//			if(toggle_pause) {
-//
-//				SimulationControl.togglePause();
-//			}
+
 			
 		}
 		tocs[2] = Debug.toc(tics[2]);
@@ -409,15 +346,7 @@ public class ReplayModel extends Subject{
 		float[] learning_dist;
 		float[] optimal_action_dist;
 		
-		// METHOD 1
-//		Floats.softmax(qValues, softmax);
-//		Floats.mul(softmax, aff_values, possible);
-//		var p_sum = Floats.sum(possible);
-//		if(p_sum == 0 ) Floats.div(aff_values, Floats.sum(aff_values), possible);
-//		else Floats.div(possible, p_sum, possible);
-//		var biased = motionBias.addBias(chosenAction, possible);
-//		learning_dist = softmax;
-//		optimal_action_dist = biased;
+
 			
 		// METHOD 2, get soft max then calculate certainty:
 		Floats.softmaxWithWeights(qValues, aff_values, softmax);
@@ -467,9 +396,7 @@ public class ReplayModel extends Subject{
 			var pcs = pc_bins[i].active_pcs;
 			vTraces[i].update(pcs.ns, pcs.ids, 0);
 			qTraces[i].update(pcs.ns, pcs.ids, chosenAction, learning_dist);
-//			System.out.println("num non zero pcs: " + pcs.ids.length);
-//			System.out.println("m,M Pc: " + Floats.min(pcs.ns) + " " + Floats.max(pcs.ns) );
-//			System.out.println("m,M T: " + Floats.min(vTraces[i].traces[0]) + " " + Floats.max(vTraces[i].traces[0]));
+
 		}
 		
 		// perform action
@@ -485,12 +412,9 @@ public class ReplayModel extends Subject{
 			Floats.mul(averages, 0.95f, averages);
 			Floats.add(averages, Floats.mul(tocs, 0.05f), averages);
 		}
-//		var percentual = Floats.div(averages, averages[tocs.length-1]/100f);
-//		System.out.println("instants: "+ Arrays.toString(tocs));
-//		System.out.println("averages: "+ Arrays.toString(averages));
-//		System.out.println("percentual:"+ Arrays.toString(percentual));
-		
-//		debug();
+
+	// Save the old state of the Place Cells 		
+
 		return 0;
 	}
 	
@@ -521,12 +445,7 @@ public class ReplayModel extends Subject{
 	public void endEpisode() {
 		super.endEpisode();
 		
-		// print tocs:
-//		System.out.println("Episode: " + Experiment.get().getGlobal("episode"));
-//		var percentual = Floats.div(averages, averages[tocs.length-1]/100f);
-//		System.out.println("instants: "+ Arrays.toString(tocs));
-//		System.out.println("averages: "+ Arrays.toString(averages));
-//		System.out.println("percentual:"+ Arrays.toString(percentual));
+
 		
 		episodeDeltaV = 0;
 		for(int i=0; i < num_layers; i++) {
@@ -535,17 +454,7 @@ public class ReplayModel extends Subject{
 			
 		}
 		
-		// DEBUG CODE BLOCK
-//		if(episodeDeltaV > 1) {
-//			System.out.println("" + Experiment.get().getGlobal("episode") 
-//					+ ", " + cell_id
-//					+ ": " + episodeDeltaV);
-//			System.out.println("ERROR: DeltaV = " + episodeDeltaV);
-//			System.out.println("At episode: " + Experiment.get().getGlobal("episode"));
-//			System.exit(-1);
-//			SimulationControl.togglePause();
-//		}
-//		System.out.println(episodeDeltaV);
+
 		
 	}
 	

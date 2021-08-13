@@ -157,11 +157,23 @@ public class PlaceCellBins {
 	 * @param y The point's y coordinate
 	 * @return  Returns the x and y indices of the bin
 	 */
-	private int[] getBin(float x, float y) {
+	public int[] getBin(float x, float y) {
 		var xbin = (int)Math.floor((x-minx)/bin_size);
 		var ybin = (int)Math.floor((y-miny)/bin_size);
 		return new int[] {xbin, ybin} ;			
 		
+	}
+	/**
+	 * Gets the bin containing a given point
+	 * @param x The point's x cooridnate
+	 * @param y The point's y coordinate
+	 * @return  Returns the active Place Cells in the bin
+	 */
+	public PlaceCells getActive_pcs(float x, float y) {
+		var xbin = (int)Math.floor((x-minx)/bin_size);
+		var ybin = (int)Math.floor((y-miny)/bin_size);
+		return pc_bins[xbin][ybin];
+
 	}
 		
 	public void clear() {

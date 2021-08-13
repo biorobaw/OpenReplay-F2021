@@ -82,8 +82,9 @@ public class ReplayModel extends Subject{
 	public float[] action_selection_probs;
 	public int chosenAction;
 	public boolean actionWasOptimal = false;
-	
-	
+	public PlaceCells old_active_bin = null;
+
+
 	
 	// GUI
 	GUI gui;
@@ -256,16 +257,24 @@ public class ReplayModel extends Subject{
 			totalActivity+=pc_bins[i].activateBin((float)pos.getX(), (float)pos.getY());
 		for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
 		// Records Place Cell Activation
-		for(int i=0; i<num_layers; i++) pcs[i].activate((float)pos.getX(), (float)pos.getY());
+		//for(int i=0; i<num_layers; i++) pcs[i].activate((float)pos.getX(), (float)pos.getY());
 		tocs[1] = Debug.toc(tics[1]);
+		// Adds PC Bins to Replay Matrix
+		rmatrix.setPcs_current(pcs);
+		rmatrix.addPlaceCellBins(pc_bins[0].getActive_pcs((float)pos.getX(), (float)pos.getY()), 1);
 
-		
 		tics[2] = Debug.tic();
 		// If not initial cycle, update state and action values
 		if(oldStateValue!=null) {
 
 			// compute path matrix
-			rmatrix.update(pcs);
+			//rmatrix.setPcs_current(pcs);
+			if(cycles>2){
+				rmatrix.update();
+
+			}
+			rmatrix.addPlaceCellBins(pc_bins[0].getActive_pcs((float)pos.getX(), (float)pos.getY()), 0);
+
 
 			// calculate bootstraps
 			float bootstrap = reward;
@@ -413,8 +422,8 @@ public class ReplayModel extends Subject{
 			Floats.add(averages, Floats.mul(tocs, 0.05f), averages);
 		}
 
-	// Save the old state of the Place Cells 		
-
+		// Save the old state of the Place Cells
+		rmatrix.setPcs_old(pcs);
 		return 0;
 	}
 	

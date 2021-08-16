@@ -4,6 +4,7 @@ package com.github.biorobaw.scs_models.openreplay_f2021.model;
 
 
 import java.io.IOException;
+import java.nio.file.FileSystemNotFoundException;
 import java.util.Arrays;
 
 import com.github.biorobaw.scs.experiment.Experiment;
@@ -28,6 +29,7 @@ import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.QTr
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.c_rl.ObstacleBiases;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.d_action.MotionBias;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.e_replay.ReplayMatrix;
+import java.util.Random;
 
 public class ReplayModel extends Subject{
 	
@@ -83,8 +85,15 @@ public class ReplayModel extends Subject{
 	public int chosenAction;
 	public boolean actionWasOptimal = false;
 	public PlaceCells old_active_bin = null;
-
-
+	public Random rn = new Random();
+	public boolean replay_flag = true;
+	int[] cell_activation_indexs;
+	int replay_cycle = 0;
+	public double theta=0;
+	public double dt = Math.PI/4;
+	public double[] action_theta = {2*dt, 1*dt, 0*dt, 7*dt, 6*dt, 5*dt, 4*dt, 3*dt};
+	public double[] d_theta = {0,0,0,0,0,0,0,0};
+	public double[] feeder_position = {.1,1.2};
 	
 	// GUI
 	GUI gui;
@@ -256,9 +265,11 @@ public class ReplayModel extends Subject{
 		for(int i=0; i<num_layers; i++) 
 			totalActivity+=pc_bins[i].activateBin((float)pos.getX(), (float)pos.getY());
 		for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+
 		// Records Place Cell Activation
-		//for(int i=0; i<num_layers; i++) pcs[i].activate((float)pos.getX(), (float)pos.getY());
+		for(int i=0; i<num_layers; i++) pcs[i].activate((float)pos.getX(), (float)pos.getY());
 		tocs[1] = Debug.toc(tics[1]);
+
 		// Adds PC Bins to Replay Matrix
 		rmatrix.setPcs_current(pcs);
 		rmatrix.addPlaceCellBins(pc_bins[0].getActive_pcs((float)pos.getX(), (float)pos.getY()), 1);
@@ -453,16 +464,112 @@ public class ReplayModel extends Subject{
 	@Override
 	public void endEpisode() {
 		super.endEpisode();
-		
 
-		
+		replay_cycle = 0;
+		replay_flag = true;
+		int[] cycle_detection = {-4,-3,-2,-1};
 		episodeDeltaV = 0;
 		for(int i=0; i < num_layers; i++) {
 			var dif = Floats.sub(vTable[i], vTableCopy[i]);
 			episodeDeltaV = Math.max(episodeDeltaV, Floats.max(Floats.abs(dif,dif)));
 			
 		}
-		
+		//TODO Add goal detection
+		var start_pc_index = rn.nextInt(pcs[0].num_cells);
+		System.out.println(start_pc_index);
+		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
+
+
+		while(replay_cycle < 2000 && replay_flag){
+			replay_cycle++;
+			// Detects a Cycle formed in the Replay event
+			cycle_detection[replay_cycle%4] = cell_activation_indexs[0];
+			for(int i = 0 ; i < 4; i ++){
+				for(int j = 0 ; j < 4; j ++){
+					if(i!=j && cycle_detection[i] == cycle_detection[j] || cell_activation_indexs[1] == -1){
+						replay_flag = false;
+					}
+				}
+			}
+
+			// Calculates Reward
+			var replay_reward = 0;
+			var diff_x = feeder_position[0] - pcs[0].xs[cell_activation_indexs[0]];
+			var diff_y = feeder_position[1] - pcs[0].ys[cell_activation_indexs[0]];
+			var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+			if (dist_feeder <= .08){
+				replay_reward = 1;
+			}
+
+			// If not at a terminal state
+			if (replay_flag){
+				// calculates action and position
+				System.out.println("Replay event");
+				var x1 = pcs[0].xs[cell_activation_indexs[0]];
+				var y1 = pcs[0].ys[cell_activation_indexs[0]];
+				var x2 = pcs[0].xs[cell_activation_indexs[1]];
+				var y2 = pcs[0].ys[cell_activation_indexs[1]];
+
+				theta = Math.atan2((y2-y1),(x2-x1));
+//				if(y2==y1){
+//					if(x2>x1){
+//						theta = 0;
+//					}else{
+//						theta = Math.PI;
+//					}
+//				}else if(x2==x1){
+//					if(y2>y1){
+//						theta = Math.PI/2;
+//					}else{
+//						theta = 3*Math.PI/2;
+//					}
+//				}else{
+//					if(x2-x1 < 0){
+//						theta = Math.atan((y2-y1)/(x2-x1)) + Math.PI;
+//					}else if(y2-y1 < 0 && x2-x1 > 0){
+//						theta = Math.atan((y2-y1)/(x2-x1)) + 2*Math.PI;
+//					}else if(y2-y1 > 0 && x2-x1 > 0) {
+//						theta = Math.atan((y2 - y1) / (x2 - x1));
+//					}
+//
+//				}
+				//System.out.println("Replay Theta:" + theta);
+//				for(int i = 0; i<action_theta.length;i++){
+//					d_theta[i] = Math.abs(theta - action_theta[i]);
+//				}
+//				var action_selected = 0;
+//				for(int i = 0; i<d_theta.length;i++){
+//					if(d_theta[i]< d_theta[action_selected]){
+//						action_selected = i;
+//					}
+//				}
+				var action_selected = Math.round((theta/dt)) % numActions;
+				if (action_selected < 0){
+					action_selected+=numActions;
+				}
+				//System.out.println("Replay Action Selected:"+ action_selected);
+
+
+				// TODO: apply RL to postion and action
+
+				// Calculates Active Place Cells
+//				float totalActivity =0;
+//				for(int i=0; i<num_layers; i++)
+//					totalActivity+=pc_bins[i].activateBin(x1, y1);
+//				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+
+				// Calculates
+
+
+				if (replay_reward == 1){
+					replay_flag = false;
+				}
+				//Shift indexes
+				cell_activation_indexs=rmatrix.replayEvent(cell_activation_indexs[1]);
+
+			}
+
+		}
 
 		
 	}
@@ -478,17 +585,19 @@ public class ReplayModel extends Subject{
 	@Override
 	public void endTrial() {
 		super.endTrial();
+
 	}
 	
 	@Override
 	public void newExperiment() {
 		super.newExperiment();
+
 	}
 	
 	@Override
 	public void endExperiment() {
 		super.endExperiment();
-		
+		rmatrix.writeRMatix();
 		// TODO: erase try catch
 //		try {
 //			System.in.read();

@@ -465,16 +465,245 @@ public class ReplayModel extends Subject{
 	public void endEpisode() {
 		super.endEpisode();
 
+//		replay_cycle = 0;
+//		replay_flag = true;
+//		int[] cycle_detection = {-4,-3,-2,-1};
+//		episodeDeltaV = 0;
+//		for(int i=0; i < num_layers; i++) {
+//			var dif = Floats.sub(vTable[i], vTableCopy[i]);
+//			episodeDeltaV = Math.max(episodeDeltaV, Floats.max(Floats.abs(dif,dif)));
+//
+//		}
+//		//TODO Add goal detection
+//		var start_pc_index = rn.nextInt(pcs[0].num_cells);
+//		System.out.println(start_pc_index);
+//		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
+//
+//
+//		while(replay_cycle < 2000 && replay_flag){
+//			replay_cycle++;
+//			// Detects a Cycle formed in the Replay event
+//			cycle_detection[replay_cycle%4] = cell_activation_indexs[0];
+//			for(int i = 0 ; i < 4; i ++){
+//				for(int j = 0 ; j < 4; j ++){
+//					if(i!=j && cycle_detection[i] == cycle_detection[j] || cell_activation_indexs[1] == -1){
+//						replay_flag = false;
+//					}
+//				}
+//			}
+//
+//			// Calculates Reward
+//			var replay_reward = 0;
+//			var diff_x = feeder_position[0] - pcs[0].xs[cell_activation_indexs[0]];
+//			var diff_y = feeder_position[1] - pcs[0].ys[cell_activation_indexs[0]];
+//			var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+//			if (dist_feeder <= .08){
+//				replay_reward = 1;
+//			}
+//
+//			// If not at a terminal state
+//			if (replay_flag){
+//				// calculates action and position
+//				System.out.println("Replay event");
+//				var x1 = pcs[0].xs[cell_activation_indexs[0]];
+//				var y1 = pcs[0].ys[cell_activation_indexs[0]];
+//				var x2 = pcs[0].xs[cell_activation_indexs[1]];
+//				var y2 = pcs[0].ys[cell_activation_indexs[1]];
+//
+//				theta = Math.atan2((y2-y1),(x2-x1));
+////				if(y2==y1){
+////					if(x2>x1){
+////						theta = 0;
+////					}else{
+////						theta = Math.PI;
+////					}
+////				}else if(x2==x1){
+////					if(y2>y1){
+////						theta = Math.PI/2;
+////					}else{
+////						theta = 3*Math.PI/2;
+////					}
+////				}else{
+////					if(x2-x1 < 0){
+////						theta = Math.atan((y2-y1)/(x2-x1)) + Math.PI;
+////					}else if(y2-y1 < 0 && x2-x1 > 0){
+////						theta = Math.atan((y2-y1)/(x2-x1)) + 2*Math.PI;
+////					}else if(y2-y1 > 0 && x2-x1 > 0) {
+////						theta = Math.atan((y2 - y1) / (x2 - x1));
+////					}
+////
+////				}
+//				//System.out.println("Replay Theta:" + theta);
+////				for(int i = 0; i<action_theta.length;i++){
+////					d_theta[i] = Math.abs(theta - action_theta[i]);
+////				}
+////				var action_selected = 0;
+////				for(int i = 0; i<d_theta.length;i++){
+////					if(d_theta[i]< d_theta[action_selected]){
+////						action_selected = i;
+////					}
+////				}
+//				var action_selected = Math.round((theta/dt)) % numActions;
+//				if (action_selected < 0){
+//					action_selected+=numActions;
+//				}
+//				//System.out.println("Replay Action Selected:"+ action_selected);
+//
+//
+//				// TODO: apply RL to postion and action
+//
+//				// Calculates Active Place Cells
+//				float totalActivity =0;
+//				for(int i=0; i<num_layers; i++)
+//					totalActivity+=pc_bins[i].activateBin(x1, y1);
+//				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+//
+//				//Calculates V
+//				float bootstrap = replay_reward;
+//				if(replay_reward==0 ) {
+//					// only calculate next state value if non terminal state
+//					float value = 0;
+//					for(int i=0; i<num_layers; i++) {
+//						var pcs = pc_bins[i].active_pcs;
+//						for(int j=0; j<pcs.num_cells; j++ ) {
+//							value+= vTable[i][pcs.ids[j]]*pcs.ns[j];
+//						}
+//					}
+//					bootstrap+= value*discountFactor;
+//				}
+//
+//				oldStateValue = 0f;
+//				qValues = new float[numActions];
+//
+//
+//
+//				for(int i=0; i<num_layers; i++) {
+//					var pcs = pc_bins[i].active_pcs;
+//					var ids = pcs.ids;
+//
+////					System.out.println(Arrays.toString(pcs.ns));
+//					for(int j=0; j<pcs.num_cells; j++) {
+//						var activation = pcs.ns[j];
+//						oldStateValue+= vTable[i][ids[j]]*activation;
+//
+//						for(int k=0; k<numActions; k++)
+//							qValues[k]+= qTable[i][ids[j]][k]*activation;
+//					}
+//				}
+//
+//				// Calculates Error
+//				float error = bootstrap - oldStateValue;
+//
+//				// Update V and Q
+//				for(int i=0; i<num_layers; i++) {
+//					// update V
+//					// v = v + error*learning_rate*trace
+//					if(actionWasOptimal || error >0  || true) {
+//						var traces = vTraces[i].traces[0];
+//						for(var id : vTraces[i].non_zero[0]) {
+//
+//							vTable[i][id]+=  error*v_learningRate[i]*traces[id];
+//						}
+//					}
+//
+//
+//					// update Q
+//					for(int j=0; j<numActions; j++) {
+//						var traces = qTraces[i].traces[j];
+//						for(var id : qTraces[i].non_zero)
+//							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
+//					}
+//				}
+//				Floats.softmax(qValues, softmax);
+//				if (replay_reward == 1){
+//					replay_flag = false;
+//				}
+//				//Shift indexes
+//				cell_activation_indexs=rmatrix.replayEvent(cell_activation_indexs[1]);
+//
+//			}
+//
+//		}
+		for(int i = 0; i<100;i++){
+			replayEvent();
+		}
+		
+	}
+	
+	@Override
+	public void newTrial() {
+		super.newTrial();
+		obstacle_biases.newTrial();
+		motionBias.newTrial();
+		
+	}
+	
+	@Override
+	public void endTrial() {
+		super.endTrial();
+
+	}
+	
+	@Override
+	public void newExperiment() {
+		super.newExperiment();
+
+	}
+	
+	@Override
+	public void endExperiment() {
+		super.endExperiment();
+		rmatrix.writeRMatix();
+		// TODO: erase try catch
+//		try {
+//			System.in.read();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+	}
+	
+	int angle_to_index(float angle) {
+		double dtita = Math.PI*2 / numActions;
+		var res = (int)Math.round(angle/dtita) % numActions;
+		return res < 0 ? res + numActions : res;
+	}
+	
+	void addMultiplicativeBias(float[] bias, float[] input, float[] output) {
+		output = Floats.mul(bias, input, output);
+		var sum = Floats.sum(output);
+		
+		if(sum!=0) Floats.div(output, sum, output);
+		else {
+			System.err.println("WARNING: Probability sum is 0, setting uniform distribution (MulytiscaleModel.java)");
+			for(int i=0; i<numActions; i++) output[i] = 1/numActions;
+		}
+	}
+	
+	float[] addMultiplicativeBias(float[] bias, float[] input) {
+		var output = Floats.mul(bias, input);
+		var sum = Floats.sum(output);
+		
+		if(sum!=0) Floats.div(output, sum, output);
+		else {
+			System.err.println("WARNING: Probability sum is 0, setting uniform distribution (MulytiscaleModel.java)");
+			Floats.uniform(output);			
+		}
+		return output;
+	}
+	
+	
+	public void replayEvent(){
 		replay_cycle = 0;
 		replay_flag = true;
 		int[] cycle_detection = {-4,-3,-2,-1};
+		// TODO Find out what this does
 		episodeDeltaV = 0;
 		for(int i=0; i < num_layers; i++) {
 			var dif = Floats.sub(vTable[i], vTableCopy[i]);
 			episodeDeltaV = Math.max(episodeDeltaV, Floats.max(Floats.abs(dif,dif)));
-			
+
 		}
-		//TODO Add goal detection
+		
 		var start_pc_index = rn.nextInt(pcs[0].num_cells);
 		System.out.println(start_pc_index);
 		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
@@ -553,14 +782,68 @@ public class ReplayModel extends Subject{
 				// TODO: apply RL to postion and action
 
 				// Calculates Active Place Cells
-//				float totalActivity =0;
-//				for(int i=0; i<num_layers; i++)
-//					totalActivity+=pc_bins[i].activateBin(x1, y1);
-//				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+				float totalActivity =0;
+				for(int i=0; i<num_layers; i++)
+					totalActivity+=pc_bins[i].activateBin(x1, y1);
+				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
 
-				// Calculates
+				//Calculates V' or bootstrap
+				float bootstrap = replay_reward;
+				if(replay_reward==0 ) {
+					// only calculate next state value if non terminal state
+					float value = 0;
+					for(int i=0; i<num_layers; i++) {
+						var pcs = pc_bins[i].active_pcs;
+						for(int j=0; j<pcs.num_cells; j++ ) {
+							value+= vTable[i][pcs.ids[j]]*pcs.ns[j];
+						}
+					}
+					bootstrap+= value*discountFactor;
+				}
+
+				oldStateValue = 0f;
+				qValues = new float[numActions];
 
 
+				// TODO Find out what this does
+				for(int i=0; i<num_layers; i++) {
+					var pcs = pc_bins[i].active_pcs;
+					var ids = pcs.ids;
+
+//					System.out.println(Arrays.toString(pcs.ns));
+					for(int j=0; j<pcs.num_cells; j++) {
+						var activation = pcs.ns[j];
+						oldStateValue+= vTable[i][ids[j]]*activation;
+
+						for(int k=0; k<numActions; k++)
+							qValues[k]+= qTable[i][ids[j]][k]*activation;
+					}
+				}
+
+				// Calculates Error
+				float error = bootstrap - oldStateValue;
+
+				// Update V and Q
+				for(int i=0; i<num_layers; i++) {
+					// update V
+					// v = v + error*learning_rate*trace
+					if(actionWasOptimal || error >0  || true) {
+						var traces = vTraces[i].traces[0];
+						for(var id : vTraces[i].non_zero[0]) {
+
+							vTable[i][id]+=  error*v_learningRate[i]*traces[id];
+						}
+					}
+
+
+					// update Q
+					for(int j=0; j<numActions; j++) {
+						var traces = qTraces[i].traces[j];
+						for(var id : qTraces[i].non_zero)
+							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
+					}
+				}
+				Floats.softmax(qValues, softmax);
 				if (replay_reward == 1){
 					replay_flag = false;
 				}
@@ -570,71 +853,5 @@ public class ReplayModel extends Subject{
 			}
 
 		}
-
-		
 	}
-	
-	@Override
-	public void newTrial() {
-		super.newTrial();
-		obstacle_biases.newTrial();
-		motionBias.newTrial();
-		
-	}
-	
-	@Override
-	public void endTrial() {
-		super.endTrial();
-
-	}
-	
-	@Override
-	public void newExperiment() {
-		super.newExperiment();
-
-	}
-	
-	@Override
-	public void endExperiment() {
-		super.endExperiment();
-		rmatrix.writeRMatix();
-		// TODO: erase try catch
-//		try {
-//			System.in.read();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-	}
-	
-	int angle_to_index(float angle) {
-		double dtita = Math.PI*2 / numActions;
-		var res = (int)Math.round(angle/dtita) % numActions;
-		return res < 0 ? res + numActions : res;
-	}
-	
-	void addMultiplicativeBias(float[] bias, float[] input, float[] output) {
-		output = Floats.mul(bias, input, output);
-		var sum = Floats.sum(output);
-		
-		if(sum!=0) Floats.div(output, sum, output);
-		else {
-			System.err.println("WARNING: Probability sum is 0, setting uniform distribution (MulytiscaleModel.java)");
-			for(int i=0; i<numActions; i++) output[i] = 1/numActions;
-		}
-	}
-	
-	float[] addMultiplicativeBias(float[] bias, float[] input) {
-		var output = Floats.mul(bias, input);
-		var sum = Floats.sum(output);
-		
-		if(sum!=0) Floats.div(output, sum, output);
-		else {
-			System.err.println("WARNING: Probability sum is 0, setting uniform distribution (MulytiscaleModel.java)");
-			Floats.uniform(output);			
-		}
-		return output;
-	}
-	
-	
-	
 }

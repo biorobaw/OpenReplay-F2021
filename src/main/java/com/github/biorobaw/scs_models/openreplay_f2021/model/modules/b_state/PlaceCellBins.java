@@ -170,10 +170,20 @@ public class PlaceCellBins {
 	 * @return  Returns the active Place Cells in the bin
 	 */
 	public PlaceCells getActive_pcs(float x, float y) {
-		var xbin = (int)Math.floor((x-minx)/bin_size);
-		var ybin = (int)Math.floor((y-miny)/bin_size);
-		return pc_bins[xbin][ybin];
+//		var xbin = (int)Math.floor((x-minx)/bin_size);
+//		var ybin = (int)Math.floor((y-miny)/bin_size);
+//		return pc_bins[xbin][ybin];
+		if( minx < x && x < maxx && miny < y && y < maxy ) {
+			active_x_id = (int)Math.floor((x-minx)/bin_size);
+			active_y_id = (int)Math.floor((y-miny)/bin_size);
+			active_pcs = pc_bins[active_x_id][active_y_id];
+		} else {
+			active_x_id = -1;
+			active_y_id = -1;
+			active_pcs  = dummyBin;
 
+		}
+		return active_pcs;
 	}
 		
 	public void clear() {

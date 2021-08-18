@@ -22,7 +22,7 @@ public class ReplayMatrix {
 	private double[][] delta;
 	private int length;
 	private PlaceCells[] placeCellBins = new PlaceCells[2];
-	private  float threshold = .001f;
+	private  float threshold = .0001f;
 	private int[] cell_propigation = {0,0};
 	private int previous_index = 0;
 

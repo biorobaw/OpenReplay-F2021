@@ -3,8 +3,10 @@ package com.github.biorobaw.scs_models.openreplay_f2021.model;
 
 
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.github.biorobaw.scs.experiment.Experiment;
@@ -91,9 +93,10 @@ public class ReplayModel extends Subject{
 	int replay_cycle = 0;
 	public double theta=0;
 	public double dt = Math.PI/4;
-	public double[] action_theta = {2*dt, 1*dt, 0*dt, 7*dt, 6*dt, 5*dt, 4*dt, 3*dt};
-	public double[] d_theta = {0,0,0,0,0,0,0,0};
 	public double[] feeder_position = {.1,1.2};
+
+	public int num_replay = 200;
+	public int num_writes = 0;
 	
 	// GUI
 	GUI gui;
@@ -443,13 +446,13 @@ public class ReplayModel extends Subject{
 		super.newEpisode();
 		motionBias.newEpisode();
 		obstacle_biases.newEpisode();
-		
+
 		for(int i=0; i<num_layers; i++) {
 			vTraces[i].clear();
 			qTraces[i].clear();
 			pc_bins[i].clear();
 		}
-	
+
 		oldStateValue = null;
 		chosenAction = -1;
 		actionWasOptimal = false;
@@ -464,167 +467,21 @@ public class ReplayModel extends Subject{
 	@Override
 	public void endEpisode() {
 		super.endEpisode();
+		// TODO Find out what this does
+		episodeDeltaV = 0;
+		for(int i=0; i < num_layers; i++) {
+			var dif = Floats.sub(vTable[i], vTableCopy[i]);
+			episodeDeltaV = Math.max(episodeDeltaV, Floats.max(Floats.abs(dif,dif)));
 
-//		replay_cycle = 0;
-//		replay_flag = true;
-//		int[] cycle_detection = {-4,-3,-2,-1};
-//		episodeDeltaV = 0;
-//		for(int i=0; i < num_layers; i++) {
-//			var dif = Floats.sub(vTable[i], vTableCopy[i]);
-//			episodeDeltaV = Math.max(episodeDeltaV, Floats.max(Floats.abs(dif,dif)));
-//
-//		}
-//		//TODO Add goal detection
-//		var start_pc_index = rn.nextInt(pcs[0].num_cells);
-//		System.out.println(start_pc_index);
-//		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
-//
-//
-//		while(replay_cycle < 2000 && replay_flag){
-//			replay_cycle++;
-//			// Detects a Cycle formed in the Replay event
-//			cycle_detection[replay_cycle%4] = cell_activation_indexs[0];
-//			for(int i = 0 ; i < 4; i ++){
-//				for(int j = 0 ; j < 4; j ++){
-//					if(i!=j && cycle_detection[i] == cycle_detection[j] || cell_activation_indexs[1] == -1){
-//						replay_flag = false;
-//					}
-//				}
-//			}
-//
-//			// Calculates Reward
-//			var replay_reward = 0;
-//			var diff_x = feeder_position[0] - pcs[0].xs[cell_activation_indexs[0]];
-//			var diff_y = feeder_position[1] - pcs[0].ys[cell_activation_indexs[0]];
-//			var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
-//			if (dist_feeder <= .08){
-//				replay_reward = 1;
-//			}
-//
-//			// If not at a terminal state
-//			if (replay_flag){
-//				// calculates action and position
-//				System.out.println("Replay event");
-//				var x1 = pcs[0].xs[cell_activation_indexs[0]];
-//				var y1 = pcs[0].ys[cell_activation_indexs[0]];
-//				var x2 = pcs[0].xs[cell_activation_indexs[1]];
-//				var y2 = pcs[0].ys[cell_activation_indexs[1]];
-//
-//				theta = Math.atan2((y2-y1),(x2-x1));
-////				if(y2==y1){
-////					if(x2>x1){
-////						theta = 0;
-////					}else{
-////						theta = Math.PI;
-////					}
-////				}else if(x2==x1){
-////					if(y2>y1){
-////						theta = Math.PI/2;
-////					}else{
-////						theta = 3*Math.PI/2;
-////					}
-////				}else{
-////					if(x2-x1 < 0){
-////						theta = Math.atan((y2-y1)/(x2-x1)) + Math.PI;
-////					}else if(y2-y1 < 0 && x2-x1 > 0){
-////						theta = Math.atan((y2-y1)/(x2-x1)) + 2*Math.PI;
-////					}else if(y2-y1 > 0 && x2-x1 > 0) {
-////						theta = Math.atan((y2 - y1) / (x2 - x1));
-////					}
-////
-////				}
-//				//System.out.println("Replay Theta:" + theta);
-////				for(int i = 0; i<action_theta.length;i++){
-////					d_theta[i] = Math.abs(theta - action_theta[i]);
-////				}
-////				var action_selected = 0;
-////				for(int i = 0; i<d_theta.length;i++){
-////					if(d_theta[i]< d_theta[action_selected]){
-////						action_selected = i;
-////					}
-////				}
-//				var action_selected = Math.round((theta/dt)) % numActions;
-//				if (action_selected < 0){
-//					action_selected+=numActions;
-//				}
-//				//System.out.println("Replay Action Selected:"+ action_selected);
-//
-//
-//				// TODO: apply RL to postion and action
-//
-//				// Calculates Active Place Cells
-//				float totalActivity =0;
-//				for(int i=0; i<num_layers; i++)
-//					totalActivity+=pc_bins[i].activateBin(x1, y1);
-//				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
-//
-//				//Calculates V
-//				float bootstrap = replay_reward;
-//				if(replay_reward==0 ) {
-//					// only calculate next state value if non terminal state
-//					float value = 0;
-//					for(int i=0; i<num_layers; i++) {
-//						var pcs = pc_bins[i].active_pcs;
-//						for(int j=0; j<pcs.num_cells; j++ ) {
-//							value+= vTable[i][pcs.ids[j]]*pcs.ns[j];
-//						}
-//					}
-//					bootstrap+= value*discountFactor;
-//				}
-//
-//				oldStateValue = 0f;
-//				qValues = new float[numActions];
-//
-//
-//
-//				for(int i=0; i<num_layers; i++) {
-//					var pcs = pc_bins[i].active_pcs;
-//					var ids = pcs.ids;
-//
-////					System.out.println(Arrays.toString(pcs.ns));
-//					for(int j=0; j<pcs.num_cells; j++) {
-//						var activation = pcs.ns[j];
-//						oldStateValue+= vTable[i][ids[j]]*activation;
-//
-//						for(int k=0; k<numActions; k++)
-//							qValues[k]+= qTable[i][ids[j]][k]*activation;
-//					}
-//				}
-//
-//				// Calculates Error
-//				float error = bootstrap - oldStateValue;
-//
-//				// Update V and Q
-//				for(int i=0; i<num_layers; i++) {
-//					// update V
-//					// v = v + error*learning_rate*trace
-//					if(actionWasOptimal || error >0  || true) {
-//						var traces = vTraces[i].traces[0];
-//						for(var id : vTraces[i].non_zero[0]) {
-//
-//							vTable[i][id]+=  error*v_learningRate[i]*traces[id];
-//						}
-//					}
-//
-//
-//					// update Q
-//					for(int j=0; j<numActions; j++) {
-//						var traces = qTraces[i].traces[j];
-//						for(var id : qTraces[i].non_zero)
-//							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
-//					}
-//				}
-//				Floats.softmax(qValues, softmax);
-//				if (replay_reward == 1){
-//					replay_flag = false;
-//				}
-//				//Shift indexes
-//				cell_activation_indexs=rmatrix.replayEvent(cell_activation_indexs[1]);
-//
-//			}
-//
-//		}
-		for(int i = 0; i<100;i++){
+		}
+		// Runs replay events
+		for(int i = 0; i<num_replay;i++){
+			for(int j=0; j<num_layers; j++) {
+				vTraces[j].clear();
+				qTraces[j].clear();
+				pc_bins[j].clear();
+			}
+			oldStateValue = null;
 			replayEvent();
 		}
 		
@@ -654,12 +511,7 @@ public class ReplayModel extends Subject{
 	public void endExperiment() {
 		super.endExperiment();
 		rmatrix.writeRMatix();
-		// TODO: erase try catch
-//		try {
-//			System.in.read();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+
 	}
 	
 	int angle_to_index(float angle) {
@@ -695,97 +547,65 @@ public class ReplayModel extends Subject{
 	public void replayEvent(){
 		replay_cycle = 0;
 		replay_flag = true;
-		int[] cycle_detection = {-4,-3,-2,-1};
-		// TODO Find out what this does
-		episodeDeltaV = 0;
-		for(int i=0; i < num_layers; i++) {
-			var dif = Floats.sub(vTable[i], vTableCopy[i]);
-			episodeDeltaV = Math.max(episodeDeltaV, Floats.max(Floats.abs(dif,dif)));
+		ArrayList<Integer> cells_vist = new ArrayList<Integer>();
 
-		}
-		
 		var start_pc_index = rn.nextInt(pcs[0].num_cells);
-		System.out.println(start_pc_index);
+		//System.out.println(start_pc_index);
 		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
+		cells_vist.add(cell_activation_indexs[0]);
 
 
 		while(replay_cycle < 2000 && replay_flag){
 			replay_cycle++;
+			var old_position = cell_activation_indexs[0];
 			// Detects a Cycle formed in the Replay event
-			cycle_detection[replay_cycle%4] = cell_activation_indexs[0];
-			for(int i = 0 ; i < 4; i ++){
-				for(int j = 0 ; j < 4; j ++){
-					if(i!=j && cycle_detection[i] == cycle_detection[j] || cell_activation_indexs[1] == -1){
-						replay_flag = false;
-					}
-				}
+			if(cells_vist.contains(cell_activation_indexs[1])|| cell_activation_indexs[1]==-1){
+				replay_flag = false;
+
+			}else{
+				cells_vist.add(cell_activation_indexs[1]);
 			}
 
-			// Calculates Reward
-			var replay_reward = 0;
-			var diff_x = feeder_position[0] - pcs[0].xs[cell_activation_indexs[0]];
-			var diff_y = feeder_position[1] - pcs[0].ys[cell_activation_indexs[0]];
-			var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
-			if (dist_feeder <= .08){
-				replay_reward = 1;
-			}
+
 
 			// If not at a terminal state
 			if (replay_flag){
 				// calculates action and position
-				System.out.println("Replay event");
+				// TODO add a distrabution of actions to sample from
+				//System.out.println("Replay event");
+				var xo = pcs[0].xs[old_position];
+				var yo = pcs[0].ys[old_position];
 				var x1 = pcs[0].xs[cell_activation_indexs[0]];
 				var y1 = pcs[0].ys[cell_activation_indexs[0]];
 				var x2 = pcs[0].xs[cell_activation_indexs[1]];
 				var y2 = pcs[0].ys[cell_activation_indexs[1]];
 
 				theta = Math.atan2((y2-y1),(x2-x1));
-//				if(y2==y1){
-//					if(x2>x1){
-//						theta = 0;
-//					}else{
-//						theta = Math.PI;
-//					}
-//				}else if(x2==x1){
-//					if(y2>y1){
-//						theta = Math.PI/2;
-//					}else{
-//						theta = 3*Math.PI/2;
-//					}
-//				}else{
-//					if(x2-x1 < 0){
-//						theta = Math.atan((y2-y1)/(x2-x1)) + Math.PI;
-//					}else if(y2-y1 < 0 && x2-x1 > 0){
-//						theta = Math.atan((y2-y1)/(x2-x1)) + 2*Math.PI;
-//					}else if(y2-y1 > 0 && x2-x1 > 0) {
-//						theta = Math.atan((y2 - y1) / (x2 - x1));
-//					}
-//
-//				}
-				//System.out.println("Replay Theta:" + theta);
-//				for(int i = 0; i<action_theta.length;i++){
-//					d_theta[i] = Math.abs(theta - action_theta[i]);
-//				}
-//				var action_selected = 0;
-//				for(int i = 0; i<d_theta.length;i++){
-//					if(d_theta[i]< d_theta[action_selected]){
-//						action_selected = i;
-//					}
-//				}
+
 				var action_selected = Math.round((theta/dt)) % numActions;
 				if (action_selected < 0){
 					action_selected+=numActions;
 				}
+
+				// Calculates Reward
+				var replay_reward = 0;
+				var diff_x = feeder_position[0] - x1;
+				var diff_y = feeder_position[1] - y1;
+				var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+				if (dist_feeder <= .08){
+					replay_reward = 1;
+				}
 				//System.out.println("Replay Action Selected:"+ action_selected);
 
 
-				// TODO: apply RL to postion and action
+				// TODO: Confirm that this is the correct formulas applied for RL
 
 				// Calculates Active Place Cells
-				float totalActivity =0;
-				for(int i=0; i<num_layers; i++)
-					totalActivity+=pc_bins[i].activateBin(x1, y1);
-				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+				// TODO: Figure out why this causes issues with PC values
+//				float totalActivity =0;
+//				for(int i=0; i<num_layers; i++)
+//					totalActivity+=pc_bins[i].activateBin(x1, y1);
+//				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
 
 				//Calculates V' or bootstrap
 				float bootstrap = replay_reward;
@@ -793,7 +613,7 @@ public class ReplayModel extends Subject{
 					// only calculate next state value if non terminal state
 					float value = 0;
 					for(int i=0; i<num_layers; i++) {
-						var pcs = pc_bins[i].active_pcs;
+						var pcs = pc_bins[i].getActive_pcs(x1,y1);
 						for(int j=0; j<pcs.num_cells; j++ ) {
 							value+= vTable[i][pcs.ids[j]]*pcs.ns[j];
 						}
@@ -801,13 +621,11 @@ public class ReplayModel extends Subject{
 					bootstrap+= value*discountFactor;
 				}
 
+				// TODO Find out what this does
 				oldStateValue = 0f;
 				qValues = new float[numActions];
-
-
-				// TODO Find out what this does
 				for(int i=0; i<num_layers; i++) {
-					var pcs = pc_bins[i].active_pcs;
+					var pcs = pc_bins[i].getActive_pcs(xo,yo);
 					var ids = pcs.ids;
 
 //					System.out.println(Arrays.toString(pcs.ns));
@@ -824,21 +642,18 @@ public class ReplayModel extends Subject{
 				float error = bootstrap - oldStateValue;
 
 				// Update V and Q
+				// TODO find out what traces do
 				for(int i=0; i<num_layers; i++) {
 					// update V
 					// v = v + error*learning_rate*trace
-					if(actionWasOptimal || error >0  || true) {
-						var traces = vTraces[i].traces[0];
-						for(var id : vTraces[i].non_zero[0]) {
-
-							vTable[i][id]+=  error*v_learningRate[i]*traces[id];
-						}
+					var traces = vTraces[i].traces[0];
+					for(var id : vTraces[i].non_zero[0]) {
+						vTable[i][id]+=  error*v_learningRate[i]*traces[id];
 					}
-
 
 					// update Q
 					for(int j=0; j<numActions; j++) {
-						var traces = qTraces[i].traces[j];
+						traces = qTraces[i].traces[j];
 						for(var id : qTraces[i].non_zero)
 							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
 					}
@@ -853,5 +668,42 @@ public class ReplayModel extends Subject{
 			}
 
 		}
+		writeReplayEvent(cells_vist);
+	}
+
+	public void writeReplayEvent(ArrayList<Integer> path){
+		FileWriter writer = null;
+		if (num_writes !=0){
+			try {
+				writer = new FileWriter("/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/Replay_Paths.csv",true);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}else {
+			try {
+				writer = new FileWriter("/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/Replay_Paths.csv");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		for(Integer cell_index: path){
+			try {
+				writer.append(String.valueOf(cell_index)+", ");
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			writer.append("\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		num_writes++;
 	}
 }

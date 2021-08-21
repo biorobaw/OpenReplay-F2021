@@ -6,8 +6,9 @@ package com.github.biorobaw.scs_models.openreplay_f2021.model;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
+
+import com.github.biorobaw.scs.maze.Maze;
 
 import com.github.biorobaw.scs.experiment.Experiment;
 import com.github.biorobaw.scs.experiment.Subject;
@@ -17,6 +18,7 @@ import com.github.biorobaw.scs.robot.modules.FeederModule;
 import com.github.biorobaw.scs.robot.modules.distance_sensing.DistanceSensingModule;
 import com.github.biorobaw.scs.robot.modules.localization.SlamModule;
 import com.github.biorobaw.scs.simulation.SimulationControl;
+import com.github.biorobaw.scs.simulation.object.maze_elements.Feeder;
 import com.github.biorobaw.scs.utils.Debug;
 import com.github.biorobaw.scs.utils.files.BinaryFile;
 import com.github.biorobaw.scs.utils.files.XML;
@@ -31,7 +33,7 @@ import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.QTr
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.c_rl.ObstacleBiases;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.d_action.MotionBias;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.e_replay.ReplayMatrix;
-import java.util.Random;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 public class ReplayModel extends Subject{
 	
@@ -69,7 +71,8 @@ public class ReplayModel extends Subject{
 	public QTraces[] qTraces;
 
 	public ReplayMatrix rm;
-	
+
+
 	// Model Variables: RL
 	public float[][] vTable;	// v[layer][pc]
 	public float[][] vTableCopy; // a copy made to compare changes between start and end of episode
@@ -93,6 +96,7 @@ public class ReplayModel extends Subject{
 	int replay_cycle = 0;
 	public double theta=0;
 	public double dt = Math.PI/4;
+	public ArrayList<Feeder> feeders = new ArrayList<Feeder>();
 	public double[] feeder_position = {.1,1.2};
 
 	public int num_replay = 200;
@@ -110,17 +114,23 @@ public class ReplayModel extends Subject{
 		float mazeWidth = xml.getFloatAttribute("mazeWidth");
 		float mazeHeight = xml.getFloatAttribute("mazeHeight");
 
+
 		// ======== MODEL INPUT ======================
 		
 		// get robot modules
 		slam = robot.getModule("slam");
 		feederModule = robot.getModule("FeederModule");
 		distance_sensors = robot.getModule("distance_sensors");
-		
-		
 		//Create affordances / distance sensing module
 		affordances = new Affordances( robot, numActions, 0.1f);
-		
+		// Gets the Positions of feeders from the maze file
+
+		Maze maze = Experiment.get().maze;
+		var feeders_map = maze.feeders;
+		feeders_map.forEach((k,v) -> feeders.add(v));
+//		System.out.println(feeders.get(0).pos);
+
+
 		// Joystick module for testing purposes:
 		// joystick = new JoystickModule();
 		
@@ -245,6 +255,8 @@ public class ReplayModel extends Subject{
 		var pos = slam.getPosition();
 		var orientation = slam.getOrientation2D();
 		float reward = feederModule.ate() ? foodReward : 0f;
+
+
 		
 		if(obstacle_bias_method == 1)
 			if(reward == 0) {
@@ -500,7 +512,7 @@ public class ReplayModel extends Subject{
 		super.endTrial();
 
 	}
-	
+
 	@Override
 	public void newExperiment() {
 		super.newExperiment();
@@ -589,12 +601,17 @@ public class ReplayModel extends Subject{
 
 				// Calculates Reward
 				var replay_reward = 0;
-				var diff_x = feeder_position[0] - x1;
-				var diff_y = feeder_position[1] - y1;
-				var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
-				if (dist_feeder <= .08){
-					replay_reward = 1;
+				for (var f: feeders){
+					var diff_x = f.pos.getX() - x1;
+					var diff_y = f.pos.getY() - y1;
+					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+					if (dist_feeder <= .08){
+						System.out.println("Replay Path found feeder");
+						replay_reward = 1;
+					}
 				}
+
+
 				//System.out.println("Replay Action Selected:"+ action_selected);
 
 

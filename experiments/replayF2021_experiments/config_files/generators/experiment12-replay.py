@@ -13,7 +13,7 @@ experiment     = 'experiments/setups/experiment_1.xml'  # relative to git root f
 
 mazeWidth   = 2.2
 mazeHeight  = 3
-episodesPerStartingLocation = 10000
+episodesPerStartingLocation = 2000
 group          = 'g1'
 
 experiment_DF = dataFrame('experiment', experiment)
@@ -25,10 +25,11 @@ dir_mazes = 'experiments/mazes/'
 dir_obstacle_mazes = dir_mazes + 'obstacles/'
 
 dir_layers  = 'experiments/pc_layers/'
-dir_layers_uniform = dir_layers +'uniform/'
-dir_layers_locally_uniform = dir_layers + 'locally_uniform/'
-dir_layers_non_uniform = dir_layers + 'non_uniform/'
-dir_layers_multi_layer = dir_layers + 'multi_layer/'
+dir_layers_uniform = dir_layers +'test/'
+#dir_layers_uniform = dir_layers +'uniform/test/'
+#dir_layers_locally_uniform = dir_layers + 'locally_uniform/'
+#dir_layers_non_uniform = dir_layers + 'non_uniform/'
+#dir_layers_multi_layer = dir_layers + 'multi_layer/'
 
 
 def load_layers(folder):
@@ -37,9 +38,9 @@ def load_layers(folder):
     return dataFrame('pc_files', [folder + f for f in layers])
 
 layers_uniform_DF          = load_layers(dir_layers_uniform)
-layers_locally_uniform_DF  = load_layers(dir_layers_locally_uniform)
-layers_non_uniform_DF      = load_layers(dir_layers_non_uniform)
-layers_multi_layer_DF      = load_layers(dir_layers_multi_layer)
+#layers_locally_uniform_DF  = load_layers(dir_layers_locally_uniform)
+#layers_non_uniform_DF      = load_layers(dir_layers_non_uniform)
+#layers_multi_layer_DF      = load_layers(dir_layers_multi_layer)
 
 # print( layers_uniform_DF )
 # print( layers_locally_uniform_DF )
@@ -47,7 +48,7 @@ layers_multi_layer_DF      = load_layers(dir_layers_multi_layer)
 # print( layers_multi_layer_DF)
 
 
-mazes_basic_DF = generateMazeDF(dir_mazes, [ f'M0{m}.xml' for m in [1, 2]])
+mazes_basic_DF = generateMazeDF(dir_mazes, [ f'M0{m}.xml' for m in [1, 2, 3]])
 mazes_obstacles_DF = generateMazeDF(dir_obstacle_mazes, [ f'M{10*o}{id}.xml' for  o in range(1,7) for id in range(10) ])
 
 # map_num_obstacles = {f'{mazesPath}/{m}' : int(m[2:4]) for m in mazes}
@@ -88,40 +89,40 @@ all_runs_m100_609 = allXall(no_rats_density_m100_609, dataFrame('run_id', [i for
 
 # locally uniform experiments ###############################################
 
-ratsPerConfig=100
-init_configs += len(no_rats_density_m100_609)
-no_rats_locally_uniform = reduce(allXall , [experiment_DF, group_DF, mazes_basic_DF, layers_locally_uniform_DF, traces_DF] )
+# ratsPerConfig=100
+# init_configs += len(no_rats_density_m100_609)
+# no_rats_locally_uniform = reduce(allXall , [experiment_DF, group_DF, mazes_basic_DF, layers_locally_uniform_DF, traces_DF] )
 
-# remove bad rows (where maze is M8 or maze is M0 and layers is lu1):
-no_rats_locally_uniform = no_rats_locally_uniform.query('not mazeFile.str.contains("M8.xml")')
-no_rats_locally_uniform = no_rats_locally_uniform.query('not mazeFile.str.contains("M0.xml") or not pc_files.str.contains("lu1")')
-no_rats_locally_uniform = no_rats_locally_uniform.copy().reset_index(drop=True)
+# # remove bad rows (where maze is M8 or maze is M0 and layers is lu1):
+# no_rats_locally_uniform = no_rats_locally_uniform.query('not mazeFile.str.contains("M8.xml")')
+# no_rats_locally_uniform = no_rats_locally_uniform.query('not mazeFile.str.contains("M0.xml") or not pc_files.str.contains("lu1")')
+# no_rats_locally_uniform = no_rats_locally_uniform.copy().reset_index(drop=True)
 
-no_rats_locally_uniform = createConfigColumn(no_rats_locally_uniform, init_configs)
-no_rats_locally_uniform['numEpisodes'] = no_rats_locally_uniform['numStartingPositions']*episodesPerStartingLocation
-all_runs_locally_uniform = allXall(no_rats_locally_uniform, dataFrame('run_id', [i for i in range(ratsPerConfig)]));
-
-
-# non uniform experiments 333333###############################################
-
-ratsPerConfig=100
-init_configs += len(no_rats_locally_uniform)
-mazes_pcs_DF = oneXone(mazes_basic_DF, layers_non_uniform_DF)
-
-no_rats_non_uniform = reduce(allXall , [experiment_DF, group_DF, mazes_pcs_DF, traces_DF] )
-no_rats_non_uniform = createConfigColumn(no_rats_non_uniform, init_configs)
-no_rats_non_uniform['numEpisodes'] = no_rats_non_uniform['numStartingPositions']*episodesPerStartingLocation
-all_runs_non_uniform = allXall(no_rats_non_uniform, dataFrame('run_id', [i for i in range(ratsPerConfig)]));
+# no_rats_locally_uniform = createConfigColumn(no_rats_locally_uniform, init_configs)
+# no_rats_locally_uniform['numEpisodes'] = no_rats_locally_uniform['numStartingPositions']*episodesPerStartingLocation
+# all_runs_locally_uniform = allXall(no_rats_locally_uniform, dataFrame('run_id', [i for i in range(ratsPerConfig)]));
 
 
-# multi layer experiments (contribution) #####################################
+# # non uniform experiments 333333###############################################
 
-ratsPerConfig = 100
-init_configs += len(no_rats_non_uniform)
-no_rats_multi_layer = reduce(allXall , [experiment_DF, group_DF, mazes_obstacles_DF, layers_multi_layer_DF, traces_DF] )
-no_rats_multi_layer = createConfigColumn(no_rats_multi_layer, init_configs)
-no_rats_multi_layer['numEpisodes'] = no_rats_multi_layer['numStartingPositions']*episodesPerStartingLocation
-all_runs_multi_layer = allXall(no_rats_multi_layer, dataFrame('run_id', [i for i in range(ratsPerConfig)]));
+# ratsPerConfig=100
+# init_configs += len(no_rats_locally_uniform)
+# mazes_pcs_DF = oneXone(mazes_basic_DF, layers_non_uniform_DF)
+
+# no_rats_non_uniform = reduce(allXall , [experiment_DF, group_DF, mazes_pcs_DF, traces_DF] )
+# no_rats_non_uniform = createConfigColumn(no_rats_non_uniform, init_configs)
+# no_rats_non_uniform['numEpisodes'] = no_rats_non_uniform['numStartingPositions']*episodesPerStartingLocation
+# all_runs_non_uniform = allXall(no_rats_non_uniform, dataFrame('run_id', [i for i in range(ratsPerConfig)]));
+
+
+# # multi layer experiments (contribution) #####################################
+
+# ratsPerConfig = 100
+# init_configs += len(no_rats_non_uniform)
+# no_rats_multi_layer = reduce(allXall , [experiment_DF, group_DF, mazes_obstacles_DF, layers_multi_layer_DF, traces_DF] )
+# no_rats_multi_layer = createConfigColumn(no_rats_multi_layer, init_configs)
+# no_rats_multi_layer['numEpisodes'] = no_rats_multi_layer['numStartingPositions']*episodesPerStartingLocation
+# all_runs_multi_layer = allXall(no_rats_multi_layer, dataFrame('run_id', [i for i in range(ratsPerConfig)]));
 
 
 

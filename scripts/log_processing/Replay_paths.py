@@ -133,11 +133,6 @@ def plot_replay_paths(title, maze_file, replay_path_file, save_name):
     #             p = p + geom_path(aes(x='x', y='y'), data=xy_df, color='blue', alpha=1.0/num_rats)
 
 
-   
-
-    
-
-
 if __name__ == '__main__':
     #folder_arg = os.path.join(sys.argv[1], '')
     #config_arg = None if len(sys.argv) < 3 else sys.argv[2]

@@ -9,6 +9,7 @@ import csv
 import xml.etree.ElementTree as ET
 from functools import *
 import pandas as pd
+from os import path
 
 
 def parse_feeder(xml_feeder):
@@ -72,7 +73,7 @@ def parse_maze(file):
 
     return walls, feeders, start_positions
 
-def plot_replay_paths(title, maze_file, replay_path_file, save_name):
+def plot_replay_paths(save_name, experiment_file, replay_path_file, root_path):
 
     # first plot paths and then plot maze
     # create plot
@@ -80,33 +81,33 @@ def plot_replay_paths(title, maze_file, replay_path_file, save_name):
 
 
 
-    p = ggplot() + ggtitle(title + '1')
+    p = ggplot() + ggtitle(save_name + '1')
 
 
-     # plot maze
-    maze_file = os.path.join(maze_file, 'mazes/M03.xml')
+    # plot maze
+    maze_file = os.path.join(experiment_file, 'mazes/M03.xml')
     walls, feeders, start_positions = parse_maze(maze_file)
     p = p + geom_segment(aes(x='x1', y='y1', xend='x2', yend='y2'), data=walls, color='k')
     p = p + geom_point(aes(x='x', y='y'), data=feeders, color='r')
     p = p + coord_fixed(ratio = 1)
-    
-
-    cells = pd.read_csv('/Users/titonka/ReplayWS/OpenReplay-F2021/experiments/pc_layers/test/u09_09.csv')
+    pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
+    cells = pd.read_csv(pc_file)
     with open(replay_path_file) as path_file:
         paths = csv.reader(path_file, delimiter = '\n')
         episode_counter = 0
         path_counter = 0
-        for path in paths:
+        for replay_path in paths:
             path_counter = path_counter + 1
-            replay_event = path[0].split(',')
+            replay_event = replay_path[0].split(',')
             #print(replay_event)
             replay_event = map(int, replay_event)
             p = p + geom_path(aes(x='x', y='y'), data=cells.loc[replay_event], color='blue', alpha=1.0/10)
             if (path_counter%200 == 0) :
                 episode_counter = episode_counter + 1
                 # save plot
-                ggsave(p, save_name + str(episode_counter) + '.pdf', path = '/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/ReplayPaths/', dpi=300)
-                p = ggplot() + ggtitle(title + str(episode_counter))
+                replay_path = path.join(rootpath,"logs/development/replayf2021/experiments/ReplayPaths/")
+                ggsave(p, save_name + str(episode_counter) + '.pdf', path = replay_path, dpi=300)
+                p = ggplot() + ggtitle(save_name + str(episode_counter))
                 # plot maze
                 #maze_file = os.path.join(maze_file, 'mazes/M03.xml')
                 #walls, feeders, start_positions = parse_maze(maze_file)
@@ -114,27 +115,12 @@ def plot_replay_paths(title, maze_file, replay_path_file, save_name):
                 p = p + geom_point(aes(x='x', y='y'), data=feeders, color='r')
                 p = p + coord_fixed(ratio = 1)
 
-    # for step in paths_test:
-    #     print(cells.loc[step])
-    #     p = p + geom_path(aes(x='x', y='y'), data=cells.loc[step], color='blue', alpha=1.0/2)
-    # # plot paths
-    # num_rats = 100
-    # for id in range(num_rats):
-    #     # check if file exists
-    #     file_name = os.path.join(config_folder, f'r{id}-paths.bin')
-    #     if not os.path.exists(file_name):
-    #         continue
-
-    #     # print(file_name, save_name)
-    #     # open file and plot each path
-    #     with open( file_name, 'rb') as file:
-    #         for i in range(int(config_df['numStartingPositions'])):
-    #             xy_df = pd.DataFrame(data=load_float_vector(file).reshape((-1, 2)), columns=["x", "y"])
-    #             p = p + geom_path(aes(x='x', y='y'), data=xy_df, color='blue', alpha=1.0/num_rats)
-
-
 if __name__ == '__main__':
     #folder_arg = os.path.join(sys.argv[1], '')
     #config_arg = None if len(sys.argv) < 3 else sys.argv[2]
     # folder_arg = 'D:/JavaWorkspaceSCS/Multiscale-F2019/experiments/BICY2020_modified/logs/experiment1-traces/'
-    plot_replay_paths('episode', '/Users/titonka/ReplayWS/OpenReplay-F2021/experiments', '/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/Replay_Paths.csv', 'episode')
+    basepath = path.dirname(__file__)
+    rootpath = path.abspath(path.join(basepath, "..", ".."))
+    experiment_path = path.abspath(path.join(rootpath,"experiments"))
+    replay_file = path.abspath(path.join(rootpath,"logs/development/replayf2021/experiments/Replay_Paths.csv"))
+    plot_replay_paths('episode', experiment_path, replay_file, rootpath)

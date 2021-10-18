@@ -59,6 +59,42 @@ public class ReplayMatrix {
 
 	}
 
+	// This function will update the replay matrix using the brute force methode?
+	public void updateAll(){
+		int num_current_cells = placeCellBins[1].num_cells;
+		int num_old_cells = placeCellBins[0].num_cells;
+		// TODO: change to a brute force why of updating replay matrix
+		for (int i = 1; i < replay_matix[0].length; i++){
+			var current_pc_index = placeCellBins[1].ids[i];
+			double arg2 = pcs_current[current_pc_index]-pcs_old[current_pc_index];
+			for (int j = 1; j < num_old_cells; j++) {
+				var old_pc_index = placeCellBins[0].ids[j];
+				double arg1 = (pcs_current[old_pc_index]+pcs_old[old_pc_index])/(2);
+
+				delta[old_pc_index][current_pc_index] = Math.atan(arg1*arg2);
+				replay_matix[old_pc_index][current_pc_index] += delta[old_pc_index][current_pc_index];
+			}
+		}
+
+	}
+
+	public void clear(){
+		int num_current_cells = placeCellBins[1].num_cells;
+		int num_old_cells = placeCellBins[0].num_cells;
+		for (int i = 1; i < num_current_cells; i++){
+			var current_pc_index = placeCellBins[1].ids[i];
+			double arg2 = pcs_current[current_pc_index]-pcs_old[current_pc_index];
+			for (int j = 1; j < num_old_cells; j++) {
+				var old_pc_index = placeCellBins[0].ids[j];
+				double arg1 = (pcs_current[old_pc_index]+pcs_old[old_pc_index])/(2);
+
+				delta[old_pc_index][current_pc_index] = Math.atan(arg1*arg2);
+				replay_matix[old_pc_index][current_pc_index] += delta[old_pc_index][current_pc_index];
+			}
+		}
+
+	}
+
 	public void setPcs_current(PlaceCells[] current_pcs){
 		this.pcs_current = new float[length];
 
@@ -105,7 +141,7 @@ public class ReplayMatrix {
 	public void writeRMatix(){
 		FileWriter writer = null;
 		try {
-			writer = new FileWriter("/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/Replay_matrix.csv");
+			writer = new FileWriter("./logs/development/replayf2021/experiments/Replay_matrix.csv");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

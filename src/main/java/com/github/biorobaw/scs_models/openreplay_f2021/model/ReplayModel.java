@@ -104,7 +104,8 @@ public class ReplayModel extends Subject{
 	
 	// GUI
 	GUI gui;
-	
+
+
 	public ReplayModel(XML xml) {
 		super(xml);
 		
@@ -156,7 +157,7 @@ public class ReplayModel extends Subject{
 		vTraces = new EligibilityTraces[num_layers];
 		qTraces = new QTraces[num_layers];
 		
-		
+		// TODO : Why do we find the average?
 		// need to find average number of active place cells:
 		float average_active_pcs = 0;
 		for (var bins : pc_bins) average_active_pcs += bins.averageBinSize;
@@ -488,6 +489,7 @@ public class ReplayModel extends Subject{
 		}
 		// Runs replay events
 		for(int i = 0; i<num_replay;i++){
+			// TODO: ask why we need to clear these, Just like if they were a new episode?
 			for(int j=0; j<num_layers; j++) {
 				vTraces[j].clear();
 				qTraces[j].clear();
@@ -496,6 +498,8 @@ public class ReplayModel extends Subject{
 			oldStateValue = null;
 			replayEvent();
 		}
+		// TODO: clear ReplayMatrix
+		//rmatrix = new ReplayMatrix(pcs);
 		
 	}
 	
@@ -605,7 +609,7 @@ public class ReplayModel extends Subject{
 					var diff_x = f.pos.getX() - x1;
 					var diff_y = f.pos.getY() - y1;
 					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
-					if (dist_feeder <= .08){
+					if (dist_feeder <= .1){
 						System.out.println("Replay Path found feeder");
 						replay_reward = 1;
 					}
@@ -618,7 +622,7 @@ public class ReplayModel extends Subject{
 				// TODO: Confirm that this is the correct formulas applied for RL
 
 				// Calculates Active Place Cells
-				// TODO: Figure out why this causes issues with PC values
+				// TODO: Figure out if this is needed
 //				float totalActivity =0;
 //				for(int i=0; i<num_layers; i++)
 //					totalActivity+=pc_bins[i].activateBin(x1, y1);
@@ -692,26 +696,33 @@ public class ReplayModel extends Subject{
 		FileWriter writer = null;
 		if (num_writes !=0){
 			try {
-				writer = new FileWriter("/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/Replay_Paths.csv",true);
+				writer = new FileWriter("./logs/development/replayf2021/experiments/Replay_Paths.csv",true);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}else {
 			try {
-				writer = new FileWriter("/Users/titonka/ReplayWS/OpenReplay-F2021/logs/development/replayf2021/experiments/Replay_Paths.csv");
+				writer = new FileWriter("./logs/development/replayf2021/experiments/Replay_Paths.csv");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		for(Integer cell_index: path){
+		for(int i = 0; i < path.size() ; i++){
 			try {
-				writer.append(String.valueOf(cell_index)+", ");
+				if (i!= path.size() -1){
+					writer.append(String.valueOf(path.get(i))+",");
+				}
+				else{
+					writer.append(String.valueOf(path.get(i)));
+				}
+
 
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 		try {
+
 			writer.append("\n");
 		} catch (IOException e) {
 			e.printStackTrace();

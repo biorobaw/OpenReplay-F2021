@@ -11,6 +11,8 @@ from functools import *
 import pandas as pd
 from os import path
 
+def parse_all_cells(file):
+    return pd.read_csv(file, usecols=['x','y','r'])
 
 def parse_feeder(xml_feeder):
     fid = int(xml_feeder.get('id'))
@@ -115,6 +117,50 @@ def plot_replay_paths(save_name, experiment_file, replay_path_file, root_path):
                 p = p + geom_point(aes(x='x', y='y'), data=feeders, color='r')
                 p = p + coord_fixed(ratio = 1)
 
+def plot_replay_matrix(save_name, experiment_file, replay_matrix_file, root_path):
+
+    # first plot paths and then plot maze
+    # create plot
+    paths_test = [[16,24,32,100]]
+    replay_path = path.join(rootpath,"logs/development/replayf2021/experiments/ReplayMatrix/")
+
+    p = ggplot() + ggtitle(save_name)
+
+    # plot maze
+    maze_file = os.path.join(experiment_file, 'mazes/M03.xml')
+    walls, feeders, start_positions = parse_maze(maze_file)
+    p = p + geom_segment(aes(x='x1', y='y1', xend='x2', yend='y2'), data=walls, color='k',alpha=1.0/5)
+    p = p + geom_point(aes(x='x', y='y'), data=feeders, color='r')
+    p = p + coord_fixed(ratio = 1)
+    pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
+    cells = parse_all_cells(pc_file)
+    p = p + geom_point(aes(x='x', y='y', size = 'r'), data=cells, color='r', alpha=1.0/10)
+
+    with open(replay_matrix_file) as path_matrix:
+        cell_weights = csv.reader(path_matrix, delimiter = '\n')
+        cell_data = []
+        for cell in cell_weights:
+            cell_data.append(cell)
+        for cell_index in range(len(cell_data)):
+            weights = cell_data[cell_index][0].split(',')
+            # Find strongest connection
+            max_weight = 0
+            max_weight_index = None
+            for i in range(len(weights) - 1):
+                if float(weights[i]) > max_weight:
+                    max_weight = float(weights[i])
+                    max_weight_index = i
+            # Plot a connection if it exsists
+            if max_weight_index != None:
+                if cells.values[cell_index][0] != cells.values[max_weight_index][0] or cells.values[cell_index][1] != cells.values[max_weight_index][1] :
+                    p = p + geom_segment(aes(x=cells.values[cell_index][0], y=cells.values[cell_index][1], xend=cells.values[max_weight_index][0], yend=cells.values[max_weight_index][1]), color='blue', alpha=1.0/2)
+                else :
+                    p = p + geom_point(aes(x=cells.values[cell_index][0], y=cells.values[cell_index][1], size = cells.values[cell_index][2]), color='g', alpha=1.0)
+            else :
+                p = p + geom_point(aes(x=cells.values[cell_index][0], y=cells.values[cell_index][1], size = cells.values[cell_index][2]), color='r', alpha=1.0)
+        # Save Plot
+        ggsave(p, save_name + '.pdf', path = replay_path, dpi=300)
+
 if __name__ == '__main__':
     #folder_arg = os.path.join(sys.argv[1], '')
     #config_arg = None if len(sys.argv) < 3 else sys.argv[2]
@@ -123,4 +169,6 @@ if __name__ == '__main__':
     rootpath = path.abspath(path.join(basepath, "..", ".."))
     experiment_path = path.abspath(path.join(rootpath,"experiments"))
     replay_file = path.abspath(path.join(rootpath,"logs/development/replayf2021/experiments/Replay_Paths.csv"))
-    plot_replay_paths('episode', experiment_path, replay_file, rootpath)
+    replay_matrix_file = path.abspath(path.join(rootpath,"logs/development/replayf2021/experiments/Replay_matrix.csv"))
+    #plot_replay_paths('episode', experiment_path, replay_file, rootpath)
+    plot_replay_matrix('Marix', experiment_path, replay_matrix_file, rootpath)

@@ -99,7 +99,7 @@ public class ReplayModel extends Subject{
 	public ArrayList<Feeder> feeders = new ArrayList<Feeder>();
 	public double[] feeder_position = {.1,1.2};
 
-	public int num_replay = 200;
+	public int num_replay = 2000;
 	public int num_writes = 0;
 	
 	// GUI
@@ -571,7 +571,7 @@ public class ReplayModel extends Subject{
 		cells_vist.add(cell_activation_indexs[0]);
 
 
-		while(replay_cycle < 2000 && replay_flag){
+		while(replay_cycle < num_replay && replay_flag){
 			replay_cycle++;
 			var old_position = cell_activation_indexs[0];
 			// Detects a Cycle formed in the Replay event
@@ -610,7 +610,7 @@ public class ReplayModel extends Subject{
 					var diff_y = f.pos.getY() - y1;
 					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
 					if (dist_feeder <= .1){
-						System.out.println("Replay Path found feeder");
+						//System.out.println("Replay Path found feeder");
 						replay_reward = 1;
 					}
 				}

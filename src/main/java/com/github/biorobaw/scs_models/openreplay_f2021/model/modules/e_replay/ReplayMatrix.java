@@ -149,7 +149,7 @@ public class ReplayMatrix {
 		for (int i = 0; i < length; i++) {
 			for (int j = 0; j<length;j++)
 				try {
-					writer.append(String.valueOf(replay_matix[i][j]));
+					writer.append(String.valueOf(replay_matix[i][j]) + ", ");
 
 				} catch (IOException e) {
 					e.printStackTrace();

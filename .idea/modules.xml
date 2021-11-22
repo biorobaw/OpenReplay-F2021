@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/OpenReplay-F2021.iml" filepath="$PROJECT_DIR$/OpenReplay-F2021.iml" />
-      <module fileurl="file://$USER_HOME$/testWS/scs/scs.iml" filepath="$USER_HOME$/testWS/scs/scs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../scs/scs.iml" filepath="$PROJECT_DIR$/../scs/scs.iml" />
     </modules>
   </component>
 </project>

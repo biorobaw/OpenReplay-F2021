@@ -10,6 +10,9 @@ import xml.etree.ElementTree as ET
 from functools import *
 import pandas as pd
 from os import path
+import glob
+from matplotlib import pyplot as plt
+import matplotlib.collections
 
 def parse_all_cells(file):
     return pd.read_csv(file, usecols=['x','y','r'])
@@ -121,8 +124,7 @@ def plot_replay_matrix(save_name, experiment_file, replay_matrix_file, root_path
 
     # first plot paths and then plot maze
     # create plot
-    paths_test = [[16,24,32,100]]
-    replay_path = path.join(rootpath,"logs/development/replayf2021/experiments/ReplayMatrix/")
+    replay_path = path.join(rootpath,"logs/development/replayf2021/experiments/ReplayMatrixPlots/")
 
     p = ggplot() + ggtitle(save_name)
 
@@ -134,7 +136,7 @@ def plot_replay_matrix(save_name, experiment_file, replay_matrix_file, root_path
     p = p + coord_fixed(ratio = 1)
     pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
     cells = parse_all_cells(pc_file)
-    p = p + geom_point(aes(x='x', y='y', size = 'r'), data=cells, color='r', alpha=1.0/10)
+    p = p + geom_point(aes(x='x', y='y', size = 'r'), data=cells, color='b', alpha=1.0/10)
 
     with open(replay_matrix_file) as path_matrix:
         cell_weights = csv.reader(path_matrix, delimiter = '\n')
@@ -159,8 +161,115 @@ def plot_replay_matrix(save_name, experiment_file, replay_matrix_file, root_path
             else :
                 p = p + geom_point(aes(x=cells.values[cell_index][0], y=cells.values[cell_index][1], size = cells.values[cell_index][2]), color='r', alpha=1.0)
         # Save Plot
-        ggsave(p, save_name + '.pdf', path = replay_path, dpi=300)
+        ggsave(p, save_name + '.png', path = replay_path, dpi=300)
 
+
+def plot_replay_matrix2(save_name, experiment_file, replay_matrix_file, root_path):
+
+    # Defines map for labels
+    my_labels = {'sc' : 'Stongest Connection'}
+    replay_path = path.join(rootpath,"logs/development/replayf2021/experiments/ReplayMatrixPlots/")
+
+    # Plots the maze and Place Cells
+    maze_file = os.path.join(experiment_file, 'mazes/M03.xml')
+    walls, feeders, start_positions = parse_maze(maze_file)
+    pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
+    cells = parse_all_cells(pc_file)
+    fig, ax = plt.subplots()
+    # print(feeders)
+    x = walls.loc[:, walls.columns[::2]]
+    y = walls.loc[:, walls.columns[1::2]]
+    for i in range(len(walls)):
+        ax.plot(x.iloc[i,:], y.iloc[i,:], color='black', alpha=1.0/5)
+    x = feeders['x']
+    y = feeders['y']
+    for i in range(len(x)):
+        ax.plot(x,y,'rx', label='Goal Location')
+    x = start_positions['x']
+    y = start_positions['y']
+    for i in range(len(x)):
+        ax.plot(x,y,'bo', label='Start Location')
+
+    x = cells['x']
+    y = cells['y']
+    r = cells['r']
+    xy = tuple(zip(x,y))
+    coll = matplotlib.collections.EllipseCollection(r, r,
+                                                    np.zeros_like(r),
+                                                    offsets=xy, units='x',
+                                                    transOffset=ax.transData,
+                                                    color= 'b',
+                                                    alpha= .1,
+                                                    label = 'Place Cells')
+    ax.add_collection(coll)
+
+    # Plots the Replay Matrix
+    self_connected_cells = []
+    self_connected_cells_r = []
+    nonconnected_cells = []
+    nonconnected_cells_r = []
+    with open(replay_matrix_file) as path_matrix:
+        cell_weights = csv.reader(path_matrix, delimiter = '\n')
+        cell_data = []
+        for cell in cell_weights:
+            cell_data.append(cell)
+        for cell_index in range(len(cell_data)):
+            weights = cell_data[cell_index][0].split(',')
+            # Find strongest connection
+            max_weight = 0
+            max_weight_index = None
+            for i in range(len(weights) - 1):
+                if float(weights[i]) > max_weight:
+                    max_weight = float(weights[i])
+                    max_weight_index = i
+            # Plot a connection if it exsists
+            if max_weight_index != None:
+                # Connected to another Place Cell
+                if cells.values[cell_index][0] != cells.values[max_weight_index][0] or cells.values[cell_index][1] != cells.values[max_weight_index][1] :
+                    x=cells.values[cell_index][0]
+                    y=cells.values[cell_index][1]
+                    dx=cells.values[max_weight_index][0] - x
+                    dy=cells.values[max_weight_index][1] - y
+                    ax.arrow(x,y,dx,dy,width=.01, length_includes_head = True, label= my_labels['sc'],color = 'b',alpha=.5)
+                    my_labels['sc'] = '_nolegend_'
+
+                # Connected to itself
+                else:
+                    self_connected_cells.append((cells.values[cell_index][0], cells.values[cell_index][1]))
+                    self_connected_cells_r.append(cells.values[cell_index][2])
+
+            # Has no connection
+            else:
+                nonconnected_cells.append((cells.values[cell_index][0], cells.values[cell_index][1]))
+                nonconnected_cells_r.append(cells.values[cell_index][2])
+
+        # Save Plot
+        coll = matplotlib.collections.EllipseCollection(nonconnected_cells_r, nonconnected_cells_r,
+                                                        np.zeros_like(nonconnected_cells_r),
+                                                        offsets=nonconnected_cells, units='x',
+                                                        transOffset=ax.transData,
+                                                        color= 'r',
+                                                        alpha= .5,
+                                                        label = 'Place Cells')
+        ax.add_collection(coll)
+
+        coll = matplotlib.collections.EllipseCollection(self_connected_cells_r, self_connected_cells_r,
+                                                        np.zeros_like(self_connected_cells_r),
+                                                        offsets=self_connected_cells, units='x',
+                                                        transOffset=ax.transData,
+                                                        color= 'g',
+                                                        alpha= .5,
+                                                        label = 'Place Cells')
+        ax.add_collection(coll)
+        lg = plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        tit = fig.suptitle(save_name, fontsize=14)
+        # plt.show()
+        fig.savefig(replay_path+save_name + '.png',
+                    dpi=300,
+                    format='png',
+                    bbox_extra_artists=(lg,tit),
+                    bbox_inches = 'tight')
+        plt.close(fig)
 if __name__ == '__main__':
     #folder_arg = os.path.join(sys.argv[1], '')
     #config_arg = None if len(sys.argv) < 3 else sys.argv[2]
@@ -169,6 +278,13 @@ if __name__ == '__main__':
     rootpath = path.abspath(path.join(basepath, "..", ".."))
     experiment_path = path.abspath(path.join(rootpath,"experiments"))
     replay_file = path.abspath(path.join(rootpath,"logs/development/replayf2021/experiments/Replay_Paths.csv"))
+    replayMatrix_dir = path.abspath(path.join(rootpath,"logs/development/replayf2021/experiments/ReplayMatrices"))
     replay_matrix_file = path.abspath(path.join(rootpath,"logs/development/replayf2021/experiments/Replay_matrix.csv"))
+    replay_matrices_files = glob.glob(os.path.join(replayMatrix_dir, "*.csv"))
+    i = 0
+    for f in replay_matrices_files:
+        i+=1
+        if i%2000 == 0 :
+            plot_replay_matrix2('Marix' + str(i), experiment_path, f, rootpath)
     #plot_replay_paths('episode', experiment_path, replay_file, rootpath)
-    plot_replay_matrix('Marix', experiment_path, replay_matrix_file, rootpath)
+    #plot_replay_matrix('Marix', experiment_path, replay_matrix_file, rootpath)

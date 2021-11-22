@@ -99,8 +99,10 @@ public class ReplayModel extends Subject{
 	public ArrayList<Feeder> feeders = new ArrayList<Feeder>();
 	public double[] feeder_position = {.1,1.2};
 
+	int freq_replay_matrix = 2000;
 	public int num_replay = 2000;
 	public int num_writes = 0;
+	int episode = 0;
 	
 	// GUI
 	GUI gui;
@@ -456,6 +458,7 @@ public class ReplayModel extends Subject{
 	
 	@Override
 	public void newEpisode() {
+		episode += 1;
 		super.newEpisode();
 		motionBias.newEpisode();
 		obstacle_biases.newEpisode();
@@ -498,7 +501,14 @@ public class ReplayModel extends Subject{
 			oldStateValue = null;
 			replayEvent();
 		}
+		// TODO: write the current ReplayMatrix
+		rmatrix.writeRMatrix(episode);
+
 		// TODO: clear ReplayMatrix
+		if (episode%freq_replay_matrix == 0){
+			rmatrix.clearRMatrix();
+		}
+
 		//rmatrix = new ReplayMatrix(pcs);
 		
 	}
@@ -526,7 +536,7 @@ public class ReplayModel extends Subject{
 	@Override
 	public void endExperiment() {
 		super.endExperiment();
-		rmatrix.writeRMatix();
+//		rmatrix.writeRMatrix(episode);
 
 	}
 	
@@ -691,6 +701,7 @@ public class ReplayModel extends Subject{
 		}
 		writeReplayEvent(cells_vist);
 	}
+
 
 	public void writeReplayEvent(ArrayList<Integer> path){
 		FileWriter writer = null;

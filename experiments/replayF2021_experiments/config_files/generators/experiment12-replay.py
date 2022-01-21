@@ -13,7 +13,7 @@ experiment     = 'experiments/setups/experiment_1.xml'  # relative to git root f
 
 mazeWidth   = 2.2
 mazeHeight  = 3
-episodesPerStartingLocation = 2000
+episodesPerStartingLocation = 200
 group          = 'g1'
 
 experiment_DF = dataFrame('experiment', experiment)
@@ -22,10 +22,11 @@ traces_DF     = dataFrame('traces',     [ 0, 0.7 ])
 
 dir_git_root = git.Repo('.', search_parent_directories=True).git.rev_parse("--show-toplevel")
 dir_mazes = 'experiments/mazes/'
+dir_mazes_replay = 'experiments/mazes/ReplayTest/'
 dir_obstacle_mazes = dir_mazes + 'obstacles/'
 
 dir_layers  = 'experiments/pc_layers/'
-dir_layers_uniform = dir_layers +'test/'
+dir_layers_uniform = dir_layers +'ReplayTest/'
 #dir_layers_uniform = dir_layers +'uniform/test/'
 #dir_layers_locally_uniform = dir_layers + 'locally_uniform/'
 #dir_layers_non_uniform = dir_layers + 'non_uniform/'
@@ -48,7 +49,8 @@ layers_uniform_DF          = load_layers(dir_layers_uniform)
 # print( layers_multi_layer_DF)
 
 
-mazes_basic_DF = generateMazeDF(dir_mazes, [ f'M0{m}.xml' for m in [1, 2, 3]])
+# mazes_basic_DF = generateMazeDF(dir_mazes, [ f'M0{m}.xml' for m in [1, 2, 3]])
+mazes_basic_DF = generateMazeDF(dir_mazes_replay, [ f'M{m}00.xml' for m in [1,2]])
 mazes_obstacles_DF = generateMazeDF(dir_obstacle_mazes, [ f'M{10*o}{id}.xml' for  o in range(1,7) for id in range(10) ])
 
 # map_num_obstacles = {f'{mazesPath}/{m}' : int(m[2:4]) for m in mazes}
@@ -59,7 +61,7 @@ init_configs = 0
 # Replay experiment mazes 01,02: ###########################################
 
 
-ratsPerConfig = 100
+ratsPerConfig = 10
 no_rats_replay_m01_02 = reduce(allXall , [experiment_DF, group_DF, mazes_basic_DF, layers_uniform_DF, traces_DF] )
 no_rats_replay_m01_02 = createConfigColumn(no_rats_replay_m01_02, init_configs)
 no_rats_replay_m01_02['numEpisodes'] = no_rats_replay_m01_02['numStartingPositions']*episodesPerStartingLocation

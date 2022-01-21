@@ -1,7 +1,5 @@
 config	experiment	group	mazeFile	numStartingPositions	pc_files	traces	numEpisodes
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/M01.xml	1	experiments/pc_layers/test/u09_09.csv	0.0	2000
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/M01.xml	1	experiments/pc_layers/test/u09_09.csv	0.7	2000
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/M02.xml	1	experiments/pc_layers/test/u09_09.csv	0.0	2000
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/M02.xml	1	experiments/pc_layers/test/u09_09.csv	0.7	2000
-c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/M03.xml	1	experiments/pc_layers/test/u09_09.csv	0.0	2000
-c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/M03.xml	1	experiments/pc_layers/test/u09_09.csv	0.7	2000
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800

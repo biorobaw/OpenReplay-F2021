@@ -11,7 +11,7 @@
 	
 	
 	<!-- DisplaySwing vs DisplayNone vs DisplayJavaFX -->
-	<display class="$(SCS).gui.displays.DisplayNone"
+	<display class="$(SCS).gui.displays.DisplayJavaFX"
 		window="-2,-2,4,4" syncDisplay="false" width="1280" height="720" record="false"/>
 		
 	<simulator

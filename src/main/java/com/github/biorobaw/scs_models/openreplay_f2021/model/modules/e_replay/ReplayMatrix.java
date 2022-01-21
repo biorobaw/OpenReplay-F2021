@@ -126,6 +126,7 @@ public class ReplayMatrix {
 		int next_pc_index = -1;
 		double max_pc_wieght = 0;
 		for (int i = 0; i < replay_matrix[current_pc_index].length; i++) {
+			// TODO: Add possible condition to ensure connection does not cross obstical
 			if (replay_matrix[current_pc_index][i] >= threshold &&
 					replay_matrix[current_pc_index][i] >= max_pc_wieght &&
 					current_pc_index != i &&

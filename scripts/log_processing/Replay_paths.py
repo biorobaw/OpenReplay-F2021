@@ -82,7 +82,7 @@ def plot_replay_paths(save_name, experiment_file, replay_path_file, root_path):
 
     # first plot paths and then plot maze
     # create plot
-    paths_test = [[16,24,32,100]] 
+    paths_test = [[16,24,32,100]]
 
 
 
@@ -90,12 +90,12 @@ def plot_replay_paths(save_name, experiment_file, replay_path_file, root_path):
 
 
     # plot maze
-    maze_file = os.path.join(experiment_file, 'mazes/M03.xml')
+    maze_file = os.path.join(experiment_file, 'mazes/M8.xml')
     walls, feeders, start_positions = parse_maze(maze_file)
     p = p + geom_segment(aes(x='x1', y='y1', xend='x2', yend='y2'), data=walls, color='k')
     p = p + geom_point(aes(x='x', y='y'), data=feeders, color='r')
     p = p + coord_fixed(ratio = 1)
-    pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
+    pc_file = os.path.join(experiment_file, 'pc_layers/largeTest/u20_25.csv')
     cells = pd.read_csv(pc_file)
     with open(replay_path_file) as path_file:
         paths = csv.reader(path_file, delimiter = '\n')
@@ -134,7 +134,7 @@ def plot_replay_matrix(save_name, experiment_file, replay_matrix_file, root_path
     p = p + geom_segment(aes(x='x1', y='y1', xend='x2', yend='y2'), data=walls, color='k',alpha=1.0/5)
     p = p + geom_point(aes(x='x', y='y'), data=feeders, color='r')
     p = p + coord_fixed(ratio = 1)
-    pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
+    pc_file = os.path.join(experiment_file, 'pc_layers/largeTest/u20_25.csv')
     cells = parse_all_cells(pc_file)
     p = p + geom_point(aes(x='x', y='y', size = 'r'), data=cells, color='b', alpha=1.0/10)
 
@@ -171,16 +171,16 @@ def plot_replay_matrix2(save_name, experiment_file, replay_matrix_file, root_pat
     replay_path = path.join(rootpath,"logs/development/replayf2021/experiments/ReplayMatrixPlots/")
 
     # Plots the maze and Place Cells
-    maze_file = os.path.join(experiment_file, 'mazes/M03.xml')
+    maze_file = os.path.join(experiment_file, 'mazes/M8.xml')
     walls, feeders, start_positions = parse_maze(maze_file)
-    pc_file = os.path.join(experiment_file, 'pc_layers/test/u09_09.csv')
+    pc_file = os.path.join(experiment_file, 'pc_layers/largeTest/u20_25.csv')
     cells = parse_all_cells(pc_file)
     fig, ax = plt.subplots()
     # print(feeders)
     x = walls.loc[:, walls.columns[::2]]
     y = walls.loc[:, walls.columns[1::2]]
     for i in range(len(walls)):
-        ax.plot(x.iloc[i,:], y.iloc[i,:], color='black', alpha=1.0/5)
+        ax.plot(x.iloc[i,:], y.iloc[i,:], color='black', alpha=1.0)
     x = feeders['x']
     y = feeders['y']
     for i in range(len(x)):
@@ -199,7 +199,7 @@ def plot_replay_matrix2(save_name, experiment_file, replay_matrix_file, root_pat
                                                     offsets=xy, units='x',
                                                     transOffset=ax.transData,
                                                     color= 'b',
-                                                    alpha= .1,
+                                                    alpha= .01,
                                                     label = 'Place Cells')
     ax.add_collection(coll)
 
@@ -284,7 +284,8 @@ if __name__ == '__main__':
     i = 0
     for f in replay_matrices_files:
         i+=1
-        if i%2000 == 0 :
-            plot_replay_matrix2('Marix' + str(i), experiment_path, f, rootpath)
+        # if i%2 == 0 :
+        #     plot_replay_matrix2('Marix' + str(i), experiment_path, f, rootpath)
+        plot_replay_matrix2('Marix' + str(i), experiment_path, f, rootpath)
     #plot_replay_paths('episode', experiment_path, replay_file, rootpath)
     #plot_replay_matrix('Marix', experiment_path, replay_matrix_file, rootpath)

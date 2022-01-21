@@ -70,7 +70,6 @@ public class ReplayModel extends Subject{
 	public EligibilityTraces[] vTraces;
 	public QTraces[] qTraces;
 
-	public ReplayMatrix rm;
 
 
 	// Model Variables: RL
@@ -99,10 +98,16 @@ public class ReplayModel extends Subject{
 	public ArrayList<Feeder> feeders = new ArrayList<Feeder>();
 	public double[] feeder_position = {.1,1.2};
 
-	int freq_replay_matrix = 2000;
-	public int num_replay = 2000;
+	// Replay Flags and Parameters
+	boolean record_trail_paths = false;
+	int freq_replay_matrix = 100;
+	int freq_replay_matrix_writes = 100;
+	public int num_replay = 200;
 	public int num_writes = 0;
 	int episode = 0;
+
+	public long trial_cycle = 0;
+	ArrayList<Long> num_trial_cycle = new ArrayList<Long>();
 	
 	// GUI
 	GUI gui;
@@ -249,6 +254,7 @@ public class ReplayModel extends Subject{
 	@Override
 	public long runModel() {
 		cycles++;
+		trial_cycle++;
 		
 		tics[tics.length-1] = Debug.tic();
 		
@@ -303,6 +309,7 @@ public class ReplayModel extends Subject{
 
 			}
 			rmatrix.addPlaceCellBins(pc_bins[0].getActive_pcs((float)pos.getX(), (float)pos.getY()), 0);
+
 
 
 			// calculate bootstraps
@@ -502,13 +509,19 @@ public class ReplayModel extends Subject{
 			replayEvent();
 		}
 		// TODO: write the current ReplayMatrix
-		rmatrix.writeRMatrix(episode);
+		if (episode%freq_replay_matrix_writes == 0){
+			rmatrix.writeRMatrix(episode);
+		}
 
+		//Updated Post Processing of Replay Matrix
 		// TODO: clear ReplayMatrix
 		if (episode%freq_replay_matrix == 0){
 			rmatrix.clearRMatrix();
 		}
 
+
+		num_trial_cycle.add(trial_cycle);
+		trial_cycle = 0;
 		//rmatrix = new ReplayMatrix(pcs);
 		
 	}
@@ -537,6 +550,25 @@ public class ReplayModel extends Subject{
 	public void endExperiment() {
 		super.endExperiment();
 //		rmatrix.writeRMatrix(episode);
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter("./logs/development/replayf2021/experiments/Number_Cycles.csv",false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		for(int i = 0; i < num_trial_cycle.size() ; i++){
+			try {
+				writer.append(String.valueOf(num_trial_cycle.get(i))+",");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 	}
 	

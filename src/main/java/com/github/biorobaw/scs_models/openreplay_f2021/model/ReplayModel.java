@@ -102,7 +102,7 @@ public class ReplayModel extends Subject{
 	boolean record_trail_paths = false;
 	int freq_replay_matrix = 100;
 	int freq_replay_matrix_writes = 100;
-	public int num_replay = 200;
+	public int num_replay = 0;
 	public int num_writes = 0;
 	int episode = 0;
 

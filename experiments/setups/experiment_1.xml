@@ -16,7 +16,7 @@
 		
 	<simulator
 		class="$(SCS).simulation.scs_simulator.SCSSimulator"
-		simulation_step_ms="30" simulation_speed="15" pause="false"/> <!-- max speed = 15 -->
+		simulation_step_ms="30" simulation_speed="15" pause="true"/> <!-- max speed = 15 -->
 
 	<maze class="$(SCS).maze.Maze"
 		  file="$(mazeFile)" />

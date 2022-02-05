@@ -8,6 +8,7 @@ import pandas as pd
 if __name__ == '__main__':
 
     log_folder = argv[1]
+    print("log folder: ",log_folder)
     configs_folder = join_path(log_folder, 'configs', '')
     search_file = configs_folder + '{}/' + argv[2].replace('#ID', '{}')    
     all_configs = pd.read_csv(join_path(log_folder,'configs.csv'),sep='\t')

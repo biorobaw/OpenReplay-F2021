@@ -1,41 +1,61 @@
-config	experiment	group	mazeFile	numStartingPositions	pc_files	traces	numEpisodes	run_id
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	0
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	1
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	2
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	3
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	4
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	5
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	6
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	7
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	8
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	9
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	0
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	1
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	2
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	3
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	4
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	5
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	6
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	7
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	8
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	9
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	0
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	1
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	2
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	3
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	4
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	5
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	6
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	7
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	8
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800	9
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	0
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	1
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	2
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	3
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	4
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	5
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	6
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	7
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	8
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800	9
+config	experiment	group	mazeFile	numStartingPositions	pc_files	traces	replay_budget	numEpisodes	run_id
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	0
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	1
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	2
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	3
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	4
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	5
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	6
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	7
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	8
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	9
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	0
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	1
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	2
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	3
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	4
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	5
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	6
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	7
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	8
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	9
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	0
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	1
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	2
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	3
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	4
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	5
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	6
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	7
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	8
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	9
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	0
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	1
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	2
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	3
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	4
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	5
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	6
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	7
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	8
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800	9
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	0
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	1
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	2
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	3
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	4
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	5
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	6
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	7
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	8
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800	9
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	0
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	1
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	2
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	3
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	4
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	5
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	6
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	7
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	8
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800	9

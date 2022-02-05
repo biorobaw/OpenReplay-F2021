@@ -1,5 +1,7 @@
-config	experiment	group	mazeFile	numStartingPositions	pc_files	traces	numEpisodes
-c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800
-c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800
-c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.0	800
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0.7	800
+config	experiment	group	mazeFile	numStartingPositions	pc_files	traces	replay_budget	numEpisodes
+c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800
+c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800
+c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	800
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	800
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	800

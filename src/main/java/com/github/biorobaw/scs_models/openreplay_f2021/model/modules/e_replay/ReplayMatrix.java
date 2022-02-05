@@ -1,11 +1,15 @@
 package com.github.biorobaw.scs_models.openreplay_f2021.model.modules.e_replay;
 
+import com.github.biorobaw.scs.experiment.Experiment;
 import com.github.biorobaw.scs.utils.math.Floats;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.PlaceCellBins;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.PlaceCells;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -139,13 +143,39 @@ public class ReplayMatrix {
 		return cell_propigation;
 	}
 
-	public void writeRMatrix(int episode) {
+	public void writeRMatrix(int episode, boolean append) {
+
+		// Gets log path and Rat Id to create a log file
+		var ex = Experiment.get();
+		String logFolder = ex.getGlobal("logPath").toString();
+		String ratId	 = ex.getGlobal("run_id").toString();
+		String dir =  logFolder;
+
+		File directory = new File(dir);
+
+		if (!directory.exists()){
+			directory.mkdir();
+		}
+
+		//create folders
+		String prefix = dir  +"/r" + ratId + "-";
+
+		// Creates the file name structure
+		var file = prefix + "Replay_Matrix.csv";
+
 		FileWriter writer = null;
 		try {
-			writer = new FileWriter("./logs/development/replayf2021/experiments/ReplayMatrices/Replay_matrix"+ String.valueOf(episode)+".csv");
+			writer = new FileWriter(file, append);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+//		try {
+//			writer.append("# \n");
+//
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
 		for (int i = 0; i < length; i++) {
 			for (int j = 0; j < length; j++)

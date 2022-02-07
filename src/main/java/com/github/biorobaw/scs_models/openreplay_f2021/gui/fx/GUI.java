@@ -151,6 +151,7 @@ public class GUI {
 		replayDrawers = new ReplayDrawer[numScales];
 		for (int i = 0; i < numScales; i++) {
 			var pcs = model.pcs[i];
+			var rmatrix = model.rmatrix;
 			replayDrawers[i] = new ReplayDrawer(pcs.xs, pcs.ys, model.vTable[i]);
 			replayDrawers[i].distanceOption = 1; // use pc radis to draw PCs
 			replayDrawers[i].setMinValue(0);

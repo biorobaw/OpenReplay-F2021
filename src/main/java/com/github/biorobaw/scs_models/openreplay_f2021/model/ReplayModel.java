@@ -5,19 +5,16 @@ package com.github.biorobaw.scs_models.openreplay_f2021.model;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystemNotFoundException;
 import java.util.*;
 
 import com.github.biorobaw.scs.maze.Maze;
 
 import com.github.biorobaw.scs.experiment.Experiment;
 import com.github.biorobaw.scs.experiment.Subject;
-import com.github.biorobaw.scs.gui.Display;
 import com.github.biorobaw.scs.robot.commands.TranslateXY;
 import com.github.biorobaw.scs.robot.modules.FeederModule;
 import com.github.biorobaw.scs.robot.modules.distance_sensing.DistanceSensingModule;
 import com.github.biorobaw.scs.robot.modules.localization.SlamModule;
-import com.github.biorobaw.scs.simulation.SimulationControl;
 import com.github.biorobaw.scs.simulation.object.maze_elements.Feeder;
 import com.github.biorobaw.scs.utils.Debug;
 import com.github.biorobaw.scs.utils.files.BinaryFile;
@@ -33,7 +30,6 @@ import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.b_state.QTr
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.c_rl.ObstacleBiases;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.d_action.MotionBias;
 import com.github.biorobaw.scs_models.openreplay_f2021.model.modules.e_replay.ReplayMatrix;
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 public class ReplayModel extends Subject{
 	
@@ -70,7 +66,6 @@ public class ReplayModel extends Subject{
 	public EligibilityTraces[] vTraces;
 	public QTraces[] qTraces;
 
-	public ReplayMatrix rm;
 
 
 	// Model Variables: RL
@@ -99,8 +94,18 @@ public class ReplayModel extends Subject{
 	public ArrayList<Feeder> feeders = new ArrayList<Feeder>();
 	public double[] feeder_position = {.1,1.2};
 
-	public int num_replay = 2000;
+	// Replay Flags and Parameters
+	boolean record_trail_paths = false;
+	int freq_replay_matrix = 1;
+	int freq_replay_matrix_writes = 100;
+	public int replay_budget;
+	public float replay_gamma = 0.98f;
 	public int num_writes = 0;
+	int episode = 0;
+	boolean append_flag = false;
+
+	public long trial_cycle = 0;
+	ArrayList<Long> num_trial_cycle = new ArrayList<Long>();
 	
 	// GUI
 	GUI gui;
@@ -114,6 +119,7 @@ public class ReplayModel extends Subject{
 		numActions = xml.getIntAttribute("numActions");
 		float mazeWidth = xml.getFloatAttribute("mazeWidth");
 		float mazeHeight = xml.getFloatAttribute("mazeHeight");
+		replay_budget = xml.getIntAttribute("replay_budget");
 
 
 		// ======== MODEL INPUT ======================
@@ -247,6 +253,7 @@ public class ReplayModel extends Subject{
 	@Override
 	public long runModel() {
 		cycles++;
+		trial_cycle++;
 		
 		tics[tics.length-1] = Debug.tic();
 		
@@ -298,9 +305,9 @@ public class ReplayModel extends Subject{
 			//rmatrix.setPcs_current(pcs);
 			if(cycles>2){
 				rmatrix.update();
-
 			}
 			rmatrix.addPlaceCellBins(pc_bins[0].getActive_pcs((float)pos.getX(), (float)pos.getY()), 0);
+
 
 
 			// calculate bootstraps
@@ -456,6 +463,7 @@ public class ReplayModel extends Subject{
 	
 	@Override
 	public void newEpisode() {
+		episode += 1;
 		super.newEpisode();
 		motionBias.newEpisode();
 		obstacle_biases.newEpisode();
@@ -488,7 +496,7 @@ public class ReplayModel extends Subject{
 
 		}
 		// Runs replay events
-		for(int i = 0; i<num_replay;i++){
+		for(int i = 0; i< replay_budget; i++){
 			// TODO: ask why we need to clear these, Just like if they were a new episode?
 			for(int j=0; j<num_layers; j++) {
 				vTraces[j].clear();
@@ -498,7 +506,23 @@ public class ReplayModel extends Subject{
 			oldStateValue = null;
 			replayEvent();
 		}
+
+		if (episode!=0){
+			append_flag = true;
+		}
+		// TODO: write the current ReplayMatrix to Bin file
+		if (episode%freq_replay_matrix_writes == 0){
+			rmatrix.writeRMatrix(episode, append_flag);
+		}
+
+		//Updated Post Processing of Replay Matrix
 		// TODO: clear ReplayMatrix
+		if (episode%freq_replay_matrix == 0){
+			rmatrix.clearRMatrix();
+		}
+
+		num_trial_cycle.add(trial_cycle);
+		trial_cycle = 0;
 		//rmatrix = new ReplayMatrix(pcs);
 		
 	}
@@ -525,8 +549,37 @@ public class ReplayModel extends Subject{
 	
 	@Override
 	public void endExperiment() {
+		var ex = Experiment.get();
+		String logFolder = ex.getGlobal("logPath").toString();
+		String ratId	 = ex.getGlobal("run_id").toString();
+
+		//create folders
+		String prefix = logFolder  +"/r" + ratId + "-";
+
+		// save cycles per episode
+		var file = prefix + "Number_Cycles.csv";
+
 		super.endExperiment();
-		rmatrix.writeRMatix();
+//		rmatrix.writeRMatrix(episode);
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(file,false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		for(int i = 0; i < num_trial_cycle.size() ; i++){
+			try {
+				writer.append(String.valueOf(num_trial_cycle.get(i))+",");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 	}
 	
@@ -559,19 +612,23 @@ public class ReplayModel extends Subject{
 		return output;
 	}
 	
-	
+
 	public void replayEvent(){
 		replay_cycle = 0;
 		replay_flag = true;
+
+		// Holds the indexes of cells that are generated during a replay event
 		ArrayList<Integer> cells_vist = new ArrayList<Integer>();
 
+		// Randomly chooses a starting position for replay event
 		var start_pc_index = rn.nextInt(pcs[0].num_cells);
 		//System.out.println(start_pc_index);
+
 		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
 		cells_vist.add(cell_activation_indexs[0]);
 
-
-		while(replay_cycle < num_replay && replay_flag){
+		var replay_reward = 0;
+		while(replay_cycle < replay_budget && replay_flag){
 			replay_cycle++;
 			var old_position = cell_activation_indexs[0];
 			// Detects a Cycle formed in the Replay event
@@ -582,9 +639,21 @@ public class ReplayModel extends Subject{
 				cells_vist.add(cell_activation_indexs[1]);
 			}
 
+			// Calculates Reward
+//				var replay_reward = 0;
+//				for (var f: feeders){
+//					var diff_x = f.pos.getX() - x1;
+//					var diff_y = f.pos.getY() - y1;
+//					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+//					if (dist_feeder <= .1){
+//						//System.out.println("Replay Path found feeder");
+//						replay_reward = 1;
+//					}
+//				}
 
 
-			// If not at a terminal state
+//			// Reinforment learning
+//			// If not at a terminal state
 			if (replay_flag){
 				// calculates action and position
 				// TODO add a distrabution of actions to sample from
@@ -604,7 +673,7 @@ public class ReplayModel extends Subject{
 				}
 
 				// Calculates Reward
-				var replay_reward = 0;
+
 				for (var f: feeders){
 					var diff_x = f.pos.getX() - x1;
 					var diff_y = f.pos.getY() - y1;
@@ -615,18 +684,14 @@ public class ReplayModel extends Subject{
 					}
 				}
 
-
-				//System.out.println("Replay Action Selected:"+ action_selected);
-
-
 				// TODO: Confirm that this is the correct formulas applied for RL
 
 				// Calculates Active Place Cells
 				// TODO: Figure out if this is needed
-//				float totalActivity =0;
-//				for(int i=0; i<num_layers; i++)
-//					totalActivity+=pc_bins[i].activateBin(x1, y1);
-//				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
+				float totalActivity =0;
+				for(int i=0; i<num_layers; i++)
+					totalActivity+=pc_bins[i].activateBin(x1, y1);
+				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
 
 				//Calculates V' or bootstrap
 				float bootstrap = replay_reward;
@@ -664,6 +729,8 @@ public class ReplayModel extends Subject{
 
 				// Update V and Q
 				// TODO find out what traces do
+				// Should traces be used for replay
+				// Pablo says this is the issue
 				for(int i=0; i<num_layers; i++) {
 					// update V
 					// v = v + error*learning_rate*trace
@@ -679,6 +746,9 @@ public class ReplayModel extends Subject{
 							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
 					}
 				}
+
+
+
 				Floats.softmax(qValues, softmax);
 				if (replay_reward == 1){
 					replay_flag = false;
@@ -689,20 +759,43 @@ public class ReplayModel extends Subject{
 			}
 
 		}
+
+//		// This is not correct
+//		// Update Vtable corrisponding to pc visited
+//		float discount_power = 1;
+//		for (int i = cells_vist.size() -1 ; i >= 0 ; i--){
+//			vTable[0][cells_vist.get(i)] = (float) (vTable[0][cells_vist.get(i)] + (replay_reward *Math.pow(replay_gamma, discount_power)));
+//			discount_power++;
+//		}
+
+
 		writeReplayEvent(cells_vist);
 	}
 
+	// TODO: Convert to a Bin File
 	public void writeReplayEvent(ArrayList<Integer> path){
+		var ex = Experiment.get();
+		String logFolder = ex.getGlobal("logPath").toString();
+		String ratId	 = ex.getGlobal("run_id").toString();
+
+		//create folders
+		String prefix = logFolder  +"/r" + ratId + "-";
+
+		// Create file name
+		// save cycles per episode
+		var file = prefix + "Replay_Paths.csv";
+
+
 		FileWriter writer = null;
 		if (num_writes !=0){
 			try {
-				writer = new FileWriter("./logs/development/replayf2021/experiments/Replay_Paths.csv",true);
+				writer = new FileWriter(file,true);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}else {
 			try {
-				writer = new FileWriter("./logs/development/replayf2021/experiments/Replay_Paths.csv");
+				writer = new FileWriter(file);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

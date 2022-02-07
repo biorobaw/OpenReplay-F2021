@@ -1,13 +1,13 @@
 #!/bin/sh
 #in git root folder execute the following commands:
 
-source "experiments/BICY2020_modified/run_set_variables.sh"
+source "experiments/replayF2021_experiments/run_set_variables.sh"
 
 
 for E in ${RUN[*]}; do
 
 	# num rats in experiment is number of lines in config file -2:
-	numLines=`wc -l $(map $E CONFIG_FILE) | cut -f1 -d' '`
+	numLines=`wc -l $(map $E CONFIG_FILE) | xargs | cut -f1 -d' '`
 	numRats=`expr ${numLines} - 2`
 
 	# if not defined, define min and max rat to be executed
@@ -16,13 +16,12 @@ for E in ${RUN[*]}; do
 
 	if [ "${1,,}" == "serial" ]; then
 		echo "Serial, running rats: $MIN_RAT-$MAX_RAT $(map $E NAME)"
-		module add apps/jdk/11.0.5 
-		module add apps/python/3.7.3;
+		#source /home/p/pablos/bash_exports.txt
 
 		# create log structure:
-		python scripts/circe_cluster/logFolderGenerator.py $(map $E LOG_FOLDER) $(map $E CONFIG_FILE)
+		python3 scripts/circe_cluster/logFolderGenerator.py $(map $E LOG_FOLDER) $(map $E CONFIG_FILE)
 
-		CMD_ARGS="-cp target/Multiscale-F2019-1.0.0-SNAPSHOT-jar-with-dependencies.jar -Xmx1500m com.github.biorobaw.scs.Main"
+		CMD_ARGS="-cp target/OpenReplay-F2021-1.0.0-SNAPSHOT-jar-with-dependencies.jar -Xmx1500m com.github.biorobaw.scs.Main"
 
 		MINI_BATCH="$2"		
 		[[ -z "$MINI_BATCH" ]] || LAST=$(( $MINI_BATCH - 1 ))

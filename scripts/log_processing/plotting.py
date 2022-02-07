@@ -191,7 +191,7 @@ def plot_paths(title, config_folder, config_df, save_name):
     p = ggplot() + ggtitle(title)
 
     # plot paths
-    num_rats = 100
+    num_rats = 5
     for id in range(num_rats):
         # check if file exists
         file_name = os.path.join(config_folder, f'r{id}-paths.bin')

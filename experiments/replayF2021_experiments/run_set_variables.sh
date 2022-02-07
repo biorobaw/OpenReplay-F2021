@@ -2,9 +2,12 @@
 
 # AUXILIARY FUNCTION
 map() { eval "echo \${$1[$2]}"; }
+config() {
+	python3 scripts/utils/rat_to_config.py	$1 $2
+}
 
 # FOLDERS
-EXPERIMENT_FOLDER="experiments/BICY2020_modified"
+EXPERIMENT_FOLDER="experiments/replayF2021_experiments"
 CONFIGS_FOLDER=$EXPERIMENT_FOLDER/config_files
 LOG_FOLDER=$EXPERIMENT_FOLDER/logs
 
@@ -12,9 +15,11 @@ LOG_FOLDER=$EXPERIMENT_FOLDER/logs
 SCRIPT_1_RUN_ALL="scripts/circe_cluster/run_all_batches.sh"
 SCRIPT_2_CHECK="scripts/log_processing/pythonUtils/MissingFiles.py"
 SCRIPT_3_PROCESS_CONFIG="scripts/circe_cluster/configuration_process_results.sh"
+SCRIPT_3_PLOT_PATHS_SLURM="scripts/circe_cluster/plot_paths.sh"
 SCRIPT_3_PLOT_PATHS=$EXPERIMENT_FOLDER/post_processing/plot_paths.py
 SCRIPT_4_MERGE="scripts/log_processing/mergeConfigs.py"
 SCRIPT_5_PLOT_EXPERIMENT=$EXPERIMENT_FOLDER/post_processing/plot_experiments.py
+
 
 # EXPERIMENTS
 RUN=()
@@ -28,7 +33,8 @@ RUN=()
 #RUN+=(E8)
 # RUN+=(E9)
 # RUN+=(E10)
-RUN+=(E11)
+#RUN+=(E11)
+RUN+=(E12)
 
 # Each experiment requires parameters: 
 #	NAME : name of the experiment
@@ -63,6 +69,14 @@ declare -A E10=( ["NAME"]=experiment10-choosingMetrics  ["BATCH_SIZE"]=100 ["SAM
 #E9[MIN_CONFIG]=0
 # E9[MAX_CONFIG]=0
 declare -A E11=( ["NAME"]=experiment11-article2  ["BATCH_SIZE"]=10 ["SAMPLE_RATE"]=5  )
+# E11[MIN_RAT]=60028
+# E11[MAX_RAT]=60028
+# E11[MIN_CONFIG]=600
+# E11[MAX_CONFIG]=600
+
+declare -A E12=( ["NAME"]=experiment12-replay  ["BATCH_SIZE"]=10 ["SAMPLE_RATE"]=1  )
+#E12[MIN_RAT]=39
+#E12[MAX_RAT]=39
 
 for E in ${RUN[*]}; do
 	eval "$E[LOG_FOLDER]=\$LOG_FOLDER/\$(map $E NAME)"

@@ -24,6 +24,8 @@ def format_scale(config):
 def format_trace(config):
     return f't{float(config["traces"]):.1f}'
 
+def format_replay_budget(config):
+    return f'r{int(config["replay_budget"])}'
 
 def format_nx(config):
     return f'nx{int(config["numX"]):02d}'
@@ -65,6 +67,7 @@ def plot_config(experiment_folder, config, config_id):
         '8': [format_maze ],
         '9': [format_maze ],
         '10': [format_maze ],
+        '12': [format_maze, format_replay_budget],
     }
     config_title = apply_formatters(config, e_formatters[experiment_name])
     save_name = os.path.join(figure_folder, 'paths_' + config_title + '.pdf')

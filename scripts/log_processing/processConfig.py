@@ -8,6 +8,37 @@ import time
 import sqlite3
 from sqlite3 import Error
 import tracemalloc
+import io
+import csv
+
+
+def getLastMatrix(file, num_cells = 315):
+    p = list(csv.reader(file, delimiter='\n'))
+    start_index = len(p)-num_cells
+    last_matrix = p[start_index:]
+
+    for i in range(len(last_matrix)):
+        last_matrix[i] = [r.strip() for r in last_matrix[i][0].split(',')]
+        last_matrix[i] = last_matrix[i][:num_cells]
+        last_matrix[i] = [float(r) for r in last_matrix[i]]
+    return np.array(last_matrix,dtype=np.float128)
+
+def adapt_array(arr):
+    out = io.BytesIO()
+    np.save(out, arr)
+    out.seek(0)
+    return sqlite3.Binary(out.read())
+
+def convert_array(text):
+    out = io.BytesIO(text)
+    out.seek(0)
+    return np.load(out)
+
+# Converts np.array to TEXT when inserting
+sqlite3.register_adapter(np.ndarray, adapt_array)
+
+# Converts TEXT to np.array when selecting
+sqlite3.register_converter("array", convert_array)
 
 
 def create_db_and_tables(config_folder):
@@ -15,7 +46,7 @@ def create_db_and_tables(config_folder):
     db_name = config_folder + 'config_results.sqlite'
     if os.path.exists(db_name):
         os.remove(db_name)
-    db = sqlite3.connect(db_name)
+    db = sqlite3.connect(db_name, detect_types=sqlite3.PARSE_DECLTYPES)
     cursor = db.cursor()
 
     # create rat_runtimes
@@ -61,7 +92,19 @@ def create_db_and_tables(config_folder):
                        PRIMARY KEY ( config, rat )
                      )  
     """
+
     cursor.execute(seed_table_schema)
+
+    replay_matrix_schema = """
+        CREATE TABLE rat_replay_matrix
+                     ( config       INTEGER,
+                       rat          INTEGER,
+                       replay_matrix array, 
+                       PRIMARY KEY ( config, rat )
+                     )  
+    """
+
+    cursor.execute(replay_matrix_schema)
 
     return db
 
@@ -136,6 +179,20 @@ def merge_seeds_from_all_rats(config_folder, config_number):
     })
 
 
+def merge_replay_matrix_from_all_rats(config_folder, config_number):
+    num_rats = len(glob.glob(config_folder + "r*-Replay_Matrix.csv"))
+    rats  = np.arange(num_rats, dtype=np.uint8)
+    file_name = config_folder + "r{}-Replay_Matrix.csv"
+    replay_matrices = []
+    for rat_id in range(0, num_rats):
+        with open(file_name.format(rat_id), 'rt') as file:
+            replay_matrices.append( getLastMatrix(file))
+    return pd.DataFrame({
+        'config'          : config_number,
+        'rat'             : rats,
+        'replay_matrix'   : replay_matrices
+    })
+
 def process_and_save_location_runtimes(run_times, location, config_folder, config_number, db):
     # save run times
     run_times = run_times.copy()
@@ -197,6 +254,7 @@ def process_config(base_folder, config, sample_rate):
     config_folder = os.path.join(base_folder, 'configs', config, '')
     config_number = np.uint16(config[1:])  # drop letter c and parse number
 
+
     # get maze metrics:
     maze_metrics = get_maze_metrics(base_folder, config)
 
@@ -205,6 +263,7 @@ def process_config(base_folder, config, sample_rate):
     all_run_times.insert(loc=0, column='config', value=config_number)
     all_run_times['errors'] = (all_run_times.steps / all_run_times.location.map(dict(maze_metrics.steps)) - 1).astype(np.float32)
     all_seeds = merge_seeds_from_all_rats(config_folder, config_number)
+    all_replay_matrix = merge_replay_matrix_from_all_rats(config_folder, config_number)
 
 
     # create database and tables to store results
@@ -212,6 +271,9 @@ def process_config(base_folder, config, sample_rate):
 
     # store seeds in database
     all_seeds.to_sql('rat_seeds', db, if_exists='append', index=False)
+
+    # store replay matirx in database
+    all_replay_matrix.to_sql('rat_replay_matrix', db, if_exists='append', index=False)
 
 
     # divide results according to location and process them
@@ -236,11 +298,15 @@ def process_config(base_folder, config, sample_rate):
     # add back location and
 
 
+
+
     # process aggregated results
     print('processing aggregated results...')
     process_and_save_location_runtimes(mean_run_times, np.uint8(location), config_folder, config_number, db)
 
     print('TOTAL TIME: {}'.format(time.time() - t1))
+    
+
     # current, peak = tracemalloc.get_traced_memory()
     # tracemalloc.stop()
     # print('MEMORY: current {}MB, peak {}MB'.format(current / 10 ** 6, peak / 10 ** 6))

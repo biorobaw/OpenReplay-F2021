@@ -41,6 +41,9 @@ public class LogData implements Script {
 		
 		var model = (ReplayModel)e.getSubject(subject_id);
 		maxDeltaV[episode] = model.episodeDeltaV;
+
+		// Write Replay Matrix
+
 		
 	}
 	

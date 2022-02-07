@@ -150,24 +150,36 @@ public class ReplayDrawer extends DrawerFX {
 			// set color of all cells
 			for(int i=0; i<num_cells; i++) {
 				cells[i].setFill(getColor(v_copy[i],maxValue));
+//				Double testx1 = cells[i].getCenterX();
+//				Double testy1 = cells[i].getCenterY();
+//				int strong_idex = i;
+//				for (int j =0; j<num_cells;j++){
+//					if (v_copy[j] >= v_copy[i]){
+//						strong_idex = j;
+//					}
+//				}
+//
+//				if (strong_idex != i && v_copy[strong_idex] > 0){
+//					Double testx2 = cells[strong_idex].getCenterX();
+//					Double testy2 = cells[strong_idex].getCenterY();
+//
+//					//Creating a line object
+//					Line line = new Line();
+//
+//					//Setting the properties to a line
+//					line.setStartX(testx1);
+//					line.setStartY(testy1);
+//					line.setEndX(testx2);
+//					line.setEndY(testy2);
+//					line.setStrokeWidth(0.01);
+//					data_panel.getChildren().add(line);
+//				}
+
+
 			}
 
-			Double testx1 = cells[0].getCenterX();
-			Double testy1 = cells[0].getCenterY();
-			int random = rand.nextInt(cells.length - 1);
-			Double testx2 = cells[random].getCenterX();
-			Double testy2 = cells[random].getCenterY();
 
-			//Creating a line object
-			Line line = new Line();
 
-			//Setting the properties to a line
-			line.setStartX(testx1);
-			line.setStartY(testy1);
-			line.setEndX(testx2);
-			line.setEndY(testy2);
-			line.setStrokeWidth(0.01);
-			data_panel.getChildren().add(line);
 
 			label_range.setText("Range: " + format.format(minData) + " ~ " + format.format(maxData));
 

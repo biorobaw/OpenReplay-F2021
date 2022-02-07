@@ -29,10 +29,6 @@ public class PlaceCellBins {
 	/**
 	 * Create and initialize the bins
 	 * @param pcs  the place cells (expected in the format: [ [x] [y] [r] [k] ])
-	 * @param minx the minx coordinate to divide space
-	 * @param miny the maxx coordinate to divide space
-	 * @param maxx the miny coordinate to divide space
-	 * @param maxy the maxy coordinate to divide space
 	 * @param bin_size the size of the bins in both x and y direction
 	 */
 	public PlaceCellBins(PlaceCells pcs, float bin_size) {
@@ -183,6 +179,13 @@ public class PlaceCellBins {
 			active_pcs  = dummyBin;
 
 		}
+		return active_pcs;
+	}
+	/**
+	 * Return the active PCs
+	 * @return  Returns the active Place Cells in the bin
+	 */
+	public PlaceCells getActive_pcs() {
 		return active_pcs;
 	}
 		

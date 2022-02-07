@@ -284,6 +284,18 @@ public class PlaceCells {
 		return this;
 		
 	}
+
+	/**
+	 * Returns a partial copy of the place cell structure. Parameters point to the original data structure, while
+	 * new arrays are created for activations
+	 * @return
+	 */
+	public PlaceCells copyPartial() {
+
+
+		return new PlaceCells(xs,  ys, rs, ks,  ids);
+
+	}
 	
 	/**
 	 * Computes the activation of each place cell.

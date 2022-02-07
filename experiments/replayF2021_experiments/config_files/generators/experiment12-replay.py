@@ -19,7 +19,7 @@ group          = 'g1'
 experiment_DF = dataFrame('experiment', experiment)
 group_DF      = dataFrame('group',      group)
 traces_DF     = dataFrame('traces',     [ 0 ])
-replay_budget_DF = dataFrame('replay_budget', [0, 10, 100])
+replay_budget_DF = dataFrame('replay_budget', [0, 10, 100, 1000])
 
 dir_git_root = git.Repo('.', search_parent_directories=True).git.rev_parse("--show-toplevel")
 dir_mazes = 'experiments/mazes/'

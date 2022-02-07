@@ -99,6 +99,7 @@ public class ReplayModel extends Subject{
 	int freq_replay_matrix = 1;
 	int freq_replay_matrix_writes = 100;
 	public int replay_budget;
+	public float replay_gamma = 0.98f;
 	public int num_writes = 0;
 	int episode = 0;
 	boolean append_flag = false;
@@ -615,14 +616,18 @@ public class ReplayModel extends Subject{
 	public void replayEvent(){
 		replay_cycle = 0;
 		replay_flag = true;
+
+		// Holds the indexes of cells that are generated during a replay event
 		ArrayList<Integer> cells_vist = new ArrayList<Integer>();
 
+		// Randomly chooses a starting position for replay event
 		var start_pc_index = rn.nextInt(pcs[0].num_cells);
 		//System.out.println(start_pc_index);
+
 		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
 		cells_vist.add(cell_activation_indexs[0]);
 
-
+		var replay_reward = 0;
 		while(replay_cycle < replay_budget && replay_flag){
 			replay_cycle++;
 			var old_position = cell_activation_indexs[0];
@@ -634,9 +639,21 @@ public class ReplayModel extends Subject{
 				cells_vist.add(cell_activation_indexs[1]);
 			}
 
+			// Calculates Reward
+//				var replay_reward = 0;
+//				for (var f: feeders){
+//					var diff_x = f.pos.getX() - x1;
+//					var diff_y = f.pos.getY() - y1;
+//					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+//					if (dist_feeder <= .1){
+//						//System.out.println("Replay Path found feeder");
+//						replay_reward = 1;
+//					}
+//				}
 
 
-			// If not at a terminal state
+//			// Reinforment learning
+//			// If not at a terminal state
 			if (replay_flag){
 				// calculates action and position
 				// TODO add a distrabution of actions to sample from
@@ -656,7 +673,7 @@ public class ReplayModel extends Subject{
 				}
 
 				// Calculates Reward
-				var replay_reward = 0;
+
 				for (var f: feeders){
 					var diff_x = f.pos.getX() - x1;
 					var diff_y = f.pos.getY() - y1;
@@ -729,6 +746,9 @@ public class ReplayModel extends Subject{
 							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
 					}
 				}
+
+
+
 				Floats.softmax(qValues, softmax);
 				if (replay_reward == 1){
 					replay_flag = false;
@@ -739,6 +759,16 @@ public class ReplayModel extends Subject{
 			}
 
 		}
+
+//		// This is not correct
+//		// Update Vtable corrisponding to pc visited
+//		float discount_power = 1;
+//		for (int i = cells_vist.size() -1 ; i >= 0 ; i--){
+//			vTable[0][cells_vist.get(i)] = (float) (vTable[0][cells_vist.get(i)] + (replay_reward *Math.pow(replay_gamma, discount_power)));
+//			discount_power++;
+//		}
+
+
 		writeReplayEvent(cells_vist);
 	}
 

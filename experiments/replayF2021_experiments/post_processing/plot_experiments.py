@@ -498,9 +498,9 @@ def plot_experiment_12(figure_folder, configs, sample_rate, db):
 
     plot_locally_uniform = True
     
-    sample_rate = 5
+    sample_rate = 100
     mazes = ["M100","M200"]
-    replay_budgets = [0,100,1000,10000]
+    replay_budgets = [0,10,100]
     location = -1
     
 

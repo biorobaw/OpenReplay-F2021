@@ -124,6 +124,8 @@ public class ReplayMatrix {
 
 	}
 
+	// This functions takes the current Place cell index and returns the index of a place cell with the highst connection
+	// strength
 	public int[] replayEvent(int pc_index) {
 		previous_index = cell_propigation[0];
 		int current_pc_index = pc_index;

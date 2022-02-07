@@ -13,7 +13,7 @@ experiment     = 'experiments/setups/experiment_1.xml'  # relative to git root f
 
 mazeWidth   = 2.2
 mazeHeight  = 3
-episodesPerStartingLocation = 200
+episodesPerStartingLocation = 500
 group          = 'g1'
 
 experiment_DF = dataFrame('experiment', experiment)
@@ -44,7 +44,7 @@ init_configs = 0
 
 
 # Replay experiment mazes 01,02: ###########################################
-ratsPerConfig = 15
+ratsPerConfig = 100
 no_rats_replay_m01_02 = reduce(allXall , [experiment_DF, group_DF, mazes_basic_DF, layers_uniform_DF, traces_DF, replay_budget_DF] )
 no_rats_replay_m01_02 = createConfigColumn(no_rats_replay_m01_02, init_configs)
 no_rats_replay_m01_02['numEpisodes'] = no_rats_replay_m01_02['numStartingPositions']*episodesPerStartingLocation

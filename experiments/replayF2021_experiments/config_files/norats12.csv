@@ -2,6 +2,8 @@ config	experiment	group	mazeFile	numStartingPositions	pc_files	traces	replay_bud
 c0	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	2000
 c1	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	10	2000
 c2	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	2000
-c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	2000
-c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	10	2000
-c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	2000
+c3	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M100.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	2000
+c4	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	0	2000
+c5	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	10	2000
+c6	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	100	2000
+c7	experiments/setups/experiment_1.xml	g1	experiments/mazes/ReplayTest/M200.xml	4	experiments/pc_layers/ReplayTest/u16_15.csv	0	1000	2000

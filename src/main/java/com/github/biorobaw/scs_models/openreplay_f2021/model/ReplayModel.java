@@ -59,7 +59,9 @@ public class ReplayModel extends Subject{
 	
 	// Model Variables: state
 	public PlaceCells[] pcs;
+	public PlaceCells[] pcs_replay;
 	public PlaceCellBins[] pc_bins;
+	public PlaceCellBins[] pc_bins_prime;
 
 	public ReplayMatrix rmatrix;
 
@@ -99,7 +101,6 @@ public class ReplayModel extends Subject{
 	int freq_replay_matrix = 1;
 	int freq_replay_matrix_writes = 100;
 	public int replay_budget;
-	public float replay_gamma = 0.98f;
 	public int num_writes = 0;
 	int episode = 0;
 	boolean append_flag = false;
@@ -147,12 +148,19 @@ public class ReplayModel extends Subject{
 		var pc_bin_size  = xml.getFloatAttribute("pc_bin_size");
 		pcs = PlaceCells.load(xml);	
 		num_layers = pcs.length;
+		pcs_replay = new PlaceCells[num_layers];
+		for(int i=0; i<num_layers; i++){
+			pcs_replay[i] = pcs[i].copyPartial();
+		}
 
 		// Initilizes Place Cell Bins
 		pc_bins = new PlaceCellBins[num_layers];
-		for(int i=0; i<num_layers; i++)
+		pc_bins_prime = new PlaceCellBins[num_layers];
+		for(int i=0; i<num_layers; i++) {
 			pc_bins[i] = new PlaceCellBins(pcs[i], pc_bin_size);
-		
+			pc_bins_prime[i] = new PlaceCellBins(pcs_replay[i], pc_bin_size);
+
+		}
 		// Initilizes Replay Matrix
 		rmatrix = new ReplayMatrix(pcs);
 		// ======== TRACES =============================
@@ -627,6 +635,8 @@ public class ReplayModel extends Subject{
 		cell_activation_indexs=rmatrix.replayEvent(start_pc_index);
 		cells_vist.add(cell_activation_indexs[0]);
 
+
+
 		var replay_reward = 0;
 		while(replay_cycle < replay_budget && replay_flag){
 			replay_cycle++;
@@ -639,17 +649,11 @@ public class ReplayModel extends Subject{
 				cells_vist.add(cell_activation_indexs[1]);
 			}
 
+
+
 			// Calculates Reward
 //				var replay_reward = 0;
-//				for (var f: feeders){
-//					var diff_x = f.pos.getX() - x1;
-//					var diff_y = f.pos.getY() - y1;
-//					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
-//					if (dist_feeder <= .1){
-//						//System.out.println("Replay Path found feeder");
-//						replay_reward = 1;
-//					}
-//				}
+//
 
 
 //			// Reinforment learning
@@ -658,8 +662,6 @@ public class ReplayModel extends Subject{
 				// calculates action and position
 				// TODO add a distrabution of actions to sample from
 				//System.out.println("Replay event");
-				var xo = pcs[0].xs[old_position];
-				var yo = pcs[0].ys[old_position];
 				var x1 = pcs[0].xs[cell_activation_indexs[0]];
 				var y1 = pcs[0].ys[cell_activation_indexs[0]];
 				var x2 = pcs[0].xs[cell_activation_indexs[1]];
@@ -667,89 +669,63 @@ public class ReplayModel extends Subject{
 
 				theta = Math.atan2((y2-y1),(x2-x1));
 
-				var action_selected = Math.round((theta/dt)) % numActions;
+				var action_selected = (int)Math.round((theta/dt)) % numActions;
 				if (action_selected < 0){
 					action_selected+=numActions;
 				}
 
-				// Calculates Reward
+				// Next postion
+				double tita = 2*Math.PI/numActions*action_selected;
+				var x_prime = x1 + .08 * Math.cos(tita);
+				var y_prime = y1 + .08 * Math.sin(tita);
 
-				for (var f: feeders){
-					var diff_x = f.pos.getX() - x1;
-					var diff_y = f.pos.getY() - y1;
-					var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
-					if (dist_feeder <= .1){
-						//System.out.println("Replay Path found feeder");
-						replay_reward = 1;
-					}
-				}
 
-				// TODO: Confirm that this is the correct formulas applied for RL
-
-				// Calculates Active Place Cells
-				// TODO: Figure out if this is needed
+				// TODO: Move into a function
+				// calculate activity for current state
 				float totalActivity =0;
 				for(int i=0; i<num_layers; i++)
-					totalActivity+=pc_bins[i].activateBin(x1, y1);
+					totalActivity+=pc_bins[i].activateBin((float)x1, (float)y1);
 				for(int i=0; i<num_layers; i++) pc_bins[i].active_pcs.normalize(totalActivity);
 
-				//Calculates V' or bootstrap
-				float bootstrap = replay_reward;
-				if(replay_reward==0 ) {
-					// only calculate next state value if non terminal state
-					float value = 0;
-					for(int i=0; i<num_layers; i++) {
-						var pcs = pc_bins[i].getActive_pcs(x1,y1);
-						for(int j=0; j<pcs.num_cells; j++ ) {
-							value+= vTable[i][pcs.ids[j]]*pcs.ns[j];
-						}
-					}
-					bootstrap+= value*discountFactor;
-				}
+				// calculate activity for current state
+				float totalActivity_prime =0;
+				for(int i=0; i<num_layers; i++)
+					totalActivity_prime+= pc_bins_prime[i].activateBin((float)x_prime, (float)y_prime);
+				for(int i=0; i<num_layers; i++) pc_bins_prime[i].active_pcs.normalize(totalActivity_prime);
 
-				// TODO Find out what this does
-				oldStateValue = 0f;
-				qValues = new float[numActions];
-				for(int i=0; i<num_layers; i++) {
-					var pcs = pc_bins[i].getActive_pcs(xo,yo);
-					var ids = pcs.ids;
 
-//					System.out.println(Arrays.toString(pcs.ns));
-					for(int j=0; j<pcs.num_cells; j++) {
-						var activation = pcs.ns[j];
-						oldStateValue+= vTable[i][ids[j]]*activation;
 
-						for(int k=0; k<numActions; k++)
-							qValues[k]+= qTable[i][ids[j]][k]*activation;
-					}
-				}
+				//Calculates bootstrap
+				replay_reward = getReward(x_prime,y_prime);
+				float bootstrap = replay_reward != 0 ?
+						replay_reward : calculateValueFunction(pc_bins_prime)*discountFactor;
 
-				// Calculates Error
-				float error = bootstrap - oldStateValue;
+				// Calculates the bootstrap error (or RL error)
+				var rl_error = bootstrap - calculateValueFunction(pc_bins);
+
+				// Calculates policy for current state
+				var policy_gradient = calculateQValue(pc_bins);
+				Floats.negate(Floats.softmax(policy_gradient,policy_gradient), policy_gradient);
+				policy_gradient[action_selected]++;
+
 
 				// Update V and Q
-				// TODO find out what traces do
-				// Should traces be used for replay
-				// Pablo says this is the issue
 				for(int i=0; i<num_layers; i++) {
+					var pcs = pc_bins[i].getActive_pcs();
 					// update V
-					// v = v + error*learning_rate*trace
-					var traces = vTraces[i].traces[0];
-					for(var id : vTraces[i].non_zero[0]) {
-						vTable[i][id]+=  error*v_learningRate[i]*traces[id];
-					}
+					for(int j=0; j<pcs.num_cells; j++ ){
+						var pc_index =pcs.ids[j];
+						vTable[i][pc_index] += rl_error * v_learningRate[i] * pcs.ns[j];
 
-					// update Q
-					for(int j=0; j<numActions; j++) {
-						traces = qTraces[i].traces[j];
-						for(var id : qTraces[i].non_zero)
-							qTable[i][id][j] += error*q_learningRate[i]*traces[id];
+						// Update Q
+						for(int k=0; k<numActions; k++) {
+							// Zik
+							var replay_trace = pcs.ns[j] * policy_gradient[k];
+							qTable[i][pc_index][k] += rl_error * q_learningRate[i] * replay_trace;
+						}
 					}
 				}
 
-
-
-				Floats.softmax(qValues, softmax);
 				if (replay_reward == 1){
 					replay_flag = false;
 				}
@@ -760,16 +736,33 @@ public class ReplayModel extends Subject{
 
 		}
 
-//		// This is not correct
-//		// Update Vtable corrisponding to pc visited
-//		float discount_power = 1;
-//		for (int i = cells_vist.size() -1 ; i >= 0 ; i--){
-//			vTable[0][cells_vist.get(i)] = (float) (vTable[0][cells_vist.get(i)] + (replay_reward *Math.pow(replay_gamma, discount_power)));
-//			discount_power++;
-//		}
-
-
 		writeReplayEvent(cells_vist);
+	}
+
+	private float[] calculateQValue(PlaceCellBins[] pc_bins) {
+		var qValues = new float[numActions];
+		for(int i=0; i<num_layers; i++) {
+			var pcs = pc_bins[i].getActive_pcs();
+			var ids = pcs.ids;
+
+			for(int j=0; j<pcs.num_cells; j++) {
+				var activation = pcs.ns[j];
+				for(int k=0; k<numActions; k++)
+					qValues[k]+= qTable[i][ids[j]][k]*activation;
+			}
+		}
+		return qValues;
+	}
+
+	private float calculateValueFunction(PlaceCellBins[] pc_bins) {
+		float value = 0;
+		for(int i=0; i<num_layers; i++) {
+			var pcs = pc_bins[i].getActive_pcs();
+			for(int j=0; j<pcs.num_cells; j++ ) {
+				value+= vTable[i][pcs.ids[j]]*pcs.ns[j];
+			}
+		}
+		return value;
 	}
 
 	// TODO: Convert to a Bin File
@@ -826,5 +819,18 @@ public class ReplayModel extends Subject{
 			e.printStackTrace();
 		}
 		num_writes++;
+	}
+
+	public int getReward(double x, double y){
+		for (var f: feeders){
+			var diff_x = f.pos.getX() - x;
+			var diff_y = f.pos.getY() - y;
+			var dist_feeder = Math.sqrt(Math.pow((diff_x),2)+Math.pow((diff_y),2));
+			if (dist_feeder <= .1) {
+				//System.out.println("Replay Path found feeder");
+				return 1;
+			}
+		}
+		return 0;
 	}
 }

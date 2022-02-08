@@ -683,7 +683,7 @@ public class ReplayModel extends Subject{
 
 				// Calculates policy for current state
 				var policy_gradient = calculateQValue(pc_bins);
-				Floats.negate(Floats.softmax(policy_gradient,policy_gradient), policy_gradient);
+				var blah = Floats.negate(Floats.softmax(policy_gradient,policy_gradient), policy_gradient);
 				policy_gradient[action_selected]++;
 
 

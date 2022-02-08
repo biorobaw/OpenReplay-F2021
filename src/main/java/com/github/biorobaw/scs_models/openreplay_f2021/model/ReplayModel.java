@@ -628,14 +628,8 @@ public class ReplayModel extends Subject{
 			}
 
 
-
-			// Calculates Reward
-//				var replay_reward = 0;
-//
-
-
-//			// Reinforment learning
-//			// If not at a terminal state
+			// Reinforment learning
+			// If not at a terminal state
 			if (replay_flag){
 				// calculates action and position
 				// TODO add a distrabution of actions to sample from
@@ -652,6 +646,7 @@ public class ReplayModel extends Subject{
 					action_selected+=numActions;
 				}
 
+				// TODO: Create a experiment variable to effect the distance traveled (.08)
 				// Next postion
 				double tita = 2*Math.PI/numActions*action_selected;
 				var x_prime = x1 + .08 * Math.cos(tita);
@@ -683,7 +678,7 @@ public class ReplayModel extends Subject{
 
 				// Calculates policy for current state
 				var policy_gradient = calculateQValue(pc_bins);
-				var blah = Floats.negate(Floats.softmax(policy_gradient,policy_gradient), policy_gradient);
+				Floats.negate(Floats.softmax(policy_gradient,policy_gradient), policy_gradient);
 				policy_gradient[action_selected]++;
 
 

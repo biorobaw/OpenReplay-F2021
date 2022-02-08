@@ -264,16 +264,14 @@ public class ReplayModel extends Subject{
 		trial_cycle++;
 		
 		tics[tics.length-1] = Debug.tic();
-		
-		
+
 		tics[0] = Debug.tic();
+
 		// get inputs
 		var pos = slam.getPosition();
 		var orientation = slam.getOrientation2D();
 		float reward = feederModule.ate() ? foodReward : 0f;
 
-
-		
 		if(obstacle_bias_method == 1)
 			if(reward == 0) {
 				reward = obstacle_biases.getReward(pos);
@@ -361,15 +359,12 @@ public class ReplayModel extends Subject{
 			
 		}
 		tocs[2] = Debug.toc(tics[2]);
-		
-		
+
 		// calculate V,Q
 		tics[3] = Debug.tic();
 		oldStateValue = 0f;
 		qValues = new float[numActions];
-		
 
-		
 		for(int i=0; i<num_layers; i++) {
 			var pcs = pc_bins[i].active_pcs;
 			var ids = pcs.ids;
@@ -383,30 +378,23 @@ public class ReplayModel extends Subject{
 					qValues[k]+= qTable[i][ids[j]][k]*activation;	
 			}
 		}
-		
 
-		
 		tocs[3] = Debug.toc(tics[3]);
 		
 		// perform action selection
 		tics[4] = Debug.tic();
-//		System.out.println(Arrays.toString(qValues));
-		
+
 
 		var aff_values = affordances.calculateAffordances(distances);
 		float[] learning_dist;
 		float[] optimal_action_dist;
-		
 
-			
 		// METHOD 2, get soft max then calculate certainty:
 		Floats.softmaxWithWeights(qValues, aff_values, softmax);
 		float non_zero = Floats.sum(aff_values);
 		float certainty = 1 - Floats.entropy(softmax, non_zero > 1 ? non_zero : 2f);
 
-
 		// If Q policy is not certain enough, use bias, else, don't use it
-//		System.out.prin tln("Certainty: " + certainty );
 		if(certainty < certainty_threshold ) {
 
 			// calculate motion bias
@@ -422,25 +410,16 @@ public class ReplayModel extends Subject{
 			// Combine bias, then add bias to softmax to get resulting probabilities
 			addMultiplicativeBias(action_selection_probs, softmax, action_selection_probs);
 		} else Floats.copy(softmax,action_selection_probs);
-		
-				
-		
+
 		learning_dist = softmax;
 //		optimal_action_dist = softmax;
 		optimal_action_dist = action_selection_probs;
-		
-		
-//		Floats.softmaxWithWeights(qValues, biased, biased);
-		
-		
+
 		chosenAction = DiscreteDistribution.sample(action_selection_probs);
 		actionWasOptimal = optimal_action_dist[chosenAction] == Floats.max(optimal_action_dist);
-		
-		
-		
+
 		tocs[4] = Debug.toc(tics[4]);
 
-		
 		// update traces
 		tics[5] = Debug.tic();
 		for(int i=0; i<num_layers; i++) {
@@ -485,7 +464,6 @@ public class ReplayModel extends Subject{
 		oldStateValue = null;
 		chosenAction = -1;
 		actionWasOptimal = false;
-		
 		
 		// copy state values:
 		for(int i=0; i < num_layers; i++)

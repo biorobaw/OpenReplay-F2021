@@ -21,7 +21,9 @@ def getLastMatrix(file, num_cells = 315):
         last_matrix[i] = [r.strip() for r in last_matrix[i][0].split(',')]
         last_matrix[i] = last_matrix[i][:num_cells]
         last_matrix[i] = [float(r) for r in last_matrix[i]]
-    return np.array(last_matrix,dtype=np.float128)
+    long_last_matrix = np.array(last_matrix,dtype=np.float128)
+    formated_last_matrix = long_last_matrix.reshape(num_cells,num_cells)
+    return formated_last_matrix
 
 def adapt_array(arr):
     out = io.BytesIO()
@@ -99,7 +101,10 @@ def create_db_and_tables(config_folder):
         CREATE TABLE rat_replay_matrix
                      ( config       INTEGER,
                        rat          INTEGER,
-                       replay_matrix array, 
+                       replay_matrix array,
+                       mean         REAL,
+                       std          REAL,
+                       total_connection REAL, 
                        PRIMARY KEY ( config, rat )
                      )  
     """
@@ -184,13 +189,25 @@ def merge_replay_matrix_from_all_rats(config_folder, config_number):
     rats  = np.arange(num_rats, dtype=np.uint8)
     file_name = config_folder + "r{}-Replay_Matrix.csv"
     replay_matrices = []
+    means = []
+    stds = []
+    totals = []
+    # TODO: Get number of place cells generalized
     for rat_id in range(0, num_rats):
         with open(file_name.format(rat_id), 'rt') as file:
-            replay_matrices.append( getLastMatrix(file))
+            replay_matrix = getLastMatrix(file)
+            replay_matrices.append(replay_matrix)
+            means.append(replay_matrix.mean())
+            stds.append(replay_matrix.std())
+            totals.append(replay_matrix.sum())
+
     return pd.DataFrame({
         'config'          : config_number,
         'rat'             : rats,
-        'replay_matrix'   : replay_matrices
+        'replay_matrix'   : replay_matrices,
+        'mean'            : means,
+        'std'             : stds,
+        'total_connection'             : totals,
     })
 
 def process_and_save_location_runtimes(run_times, location, config_folder, config_number, db):

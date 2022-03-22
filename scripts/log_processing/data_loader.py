@@ -1,8 +1,26 @@
 import os
+import io
 import re
 import numpy as np
 import pandas as pd
+import sqlite3
 
+def adapt_array(arr):
+    out = io.BytesIO()
+    np.save(out, arr)
+    out.seek(0)
+    return sqlite3.Binary(out.read())
+
+def convert_array(text):
+    out = io.BytesIO(text)
+    out.seek(0)
+    return np.load(out)
+
+# Converts np.array to TEXT when inserting
+sqlite3.register_adapter(np.ndarray, adapt_array)
+
+# Converts TEXT to np.array when selecting
+sqlite3.register_converter("array", convert_array)
 
 def get_list_of_configs(configs_folder):
     all_configs = [f for f in os.listdir(configs_folder) if re.match('c\\d+$', f)]
@@ -28,12 +46,16 @@ def load_summaries(db, config_indices, location):
                            "where config in ({}) "
                            "AND location = {}"
                            .format(indices_str, np.uint8(location)), db)
+    df2 = pd.read_sql_query("select config, rat, replay_matrix, mean, std, total_connection "
+                            "from rat_replay_matrix "
+                            "where config in ({}) "
+                            .format(indices_str, np.uint8(location)), db)
     # adjust data types to reduce memory size
     df.config = df.config.astype(np.uint16)
     df.location = df.location.astype(np.uint8)
     df.episode = df.episode.astype(np.uint16)
     df.steps = df.steps.astype(np.float32)
-    return df
+    return [df, df2]
 
 
 def load_deltaV(db, config_indices, location):

@@ -1,17 +1,36 @@
 import os, sys, git, time, re, ntpath, tracemalloc, sqlite3, pandas as pd, numpy as np
 from pandas.api.types import CategoricalDtype
 
+
+
 import matplotlib.pyplot as plt
 
 git_root = git.Repo('.', search_parent_directories=True).git.rev_parse("--show-toplevel")
 sys.path.append(git_root)
 from scripts.log_processing.plotting import *
+from scripts.log_processing.mazeAndPcsPlotter import *
+from scripts.log_processing.data_loader import *
+
 
 layers_folder = 'experiments/pc_layers/'
 layer_metrics_file = os.path.join(git_root, layers_folder , 'layer_metrics.csv')
 
+# Converts np.array to TEXT when inserting
+sqlite3.register_adapter(np.ndarray, adapt_array)
 
+# Converts TEXT to np.array when selecting
+sqlite3.register_converter("array", convert_array)
 
+def adapt_array(arr):
+    out = io.BytesIO()
+    np.save(out, arr)
+    out.seek(0)
+    return sqlite3.Binary(out.read())
+
+def convert_array(text):
+    out = io.BytesIO(text)
+    out.seek(0)
+    return np.load(out)
 
 def lastEpisode(configs, sample_rate):
     num_episodes = configs['numEpisodes'].max() / configs['numStartingPositions'].max()
@@ -21,15 +40,23 @@ def lastEpisode(configs, sample_rate):
 def getDataEpisodeAndSummaries(db, configs, fields_to_add, episode, location, skip_runtimes = False, skip_summary = False):
     # GET INDICES TO BE RETRIEVED AND EXTRA DATA TO BE MERGED
     indices = [np.uint16(c[1:]) for c in configs.index]  # config numbers
-    
+
     # GET SUMMARIZED RUNTIME DATA
-    summaries = None if skip_summary else augment_data(load_summaries(db, indices, location), configs, fields_to_add)
+    summaries = None if skip_summary else augment_data(load_summaries(db, indices, location)[0], configs, fields_to_add)
 
     # GET EPISODE DATA:
-    runtimes_last_episode = None if skip_runtimes else augment_data(load_episode_runtimes(db, indices, location, episode), configs, fields_to_add)
-            
-    return summaries, runtimes_last_episode
+    runtimes_episode = None if skip_runtimes else augment_data(load_episode_runtimes(db, indices, location, episode), configs, fields_to_add)
 
+    return summaries, runtimes_episode
+
+def getReplayData(db, configs, fields_to_add, episode, location, skip_runtimes = False, skip_summary = False):
+    # GET INDICES TO BE RETRIEVED AND EXTRA DATA TO BE MERGED
+    indices = [np.uint16(c[1:]) for c in configs.index]  # config numbers
+
+    # GET Replay DATA
+    summaries = None if skip_summary else augment_data(load_summaries(db, indices, location)[1], configs, fields_to_add)
+
+    return summaries
 
 def getLearningTimes(db, configs, location, threshold, fields_to_add):
     indices = [np.uint16(c[1:]) for c in configs.index]  # config numbers
@@ -40,6 +67,17 @@ def getLearningTimes(db, configs, location, threshold, fields_to_add):
     learning_times = runtimes_all_episodes.loc[runtimes_all_episodes.groupby(['config', 'location', 'rat'])['episode'].idxmin()]
     
     return augment_data(learning_times, configs, fields_to_add)
+
+def getMazeAndPcsFolder():
+    basepath = path.dirname('')
+    rootpath = path.abspath(path.join(basepath, ".."))
+    # maze_folder = path.abspath(path.join(basepath,"logs/experiment12-replay/mazes/"))
+    # pc_folder = path.abspath(path.join(basepath,"logs/experiment12-replay/pc_layers/"))
+
+    maze_folder = path.abspath(path.join(basepath,"experiments/replayF2021_experiments/logs/experiment12-replay/mazes/"))
+    pc_folder = path.abspath(path.join(basepath,"experiments/replayF2021_experiments/logs/experiment12-replay/pc_layers/"))
+
+    return maze_folder, pc_folder
 
 def getLearningTimesThresholded(db, configs, location, threshold, fields_to_add):
     indices = [np.uint16(c[1:]) for c in configs.index]  # config numbers
@@ -54,7 +92,9 @@ def getLearningTimesThresholded(db, configs, location, threshold, fields_to_add)
 def augment_data(data, configs, fields):
     return pd.merge(data, configs[ ['c_id'] + fields ], left_on='config', right_on='c_id', how='left')
 
-
+def addCatigoricalData(data, field):
+    catigorical_name = field + '_c'
+    data[catigorical_name] = data[field].astype(CategoricalDtype(data[field].unique(), ordered=True))
 #########################################################################################################################################################
 # PLOT FUNCTIONS:
 #########################################################################################################################################################
@@ -498,8 +538,8 @@ def plot_experiment_12(figure_folder, configs, sample_rate, db):
 
     plot_locally_uniform = True
     
-    sample_rate = 100
-    mazes = ["M100","M200"]
+    sample_rate = 1
+    mazes = ["M100"]
     replay_budgets = [0,10,100]
     location = -1
     
@@ -518,17 +558,17 @@ def plot_experiment_12(figure_folder, configs, sample_rate, db):
     #########################################################################################################################################################
     # Plotting Functions:
     #########################################################################################################################################################
-    def plot_box_plot(data, x_column, y_column, x_title, y_title, plot_title):
+    def plot_box_plot(data, x_column, y_column, x_title, y_title, plot_title, ylim, box_colors):
         # print(data)
         p0 = ggplot(data, aes(x_column, y_column ))
         p0 += geom_jitter(alpha=0.3)
-        p0 += geom_boxplot(alpha=0.7, notch=False, outlier_alpha=0 )
+        p0 += geom_boxplot(alpha=0.7, notch=False, outlier_alpha=0, color = box_colors )
         p0 += xlab(x_title)
         p0 += ylab(y_title)
         p0 += ggtitle(plot_title)
         # p0 += labs(x=x_title, y=y_title, title=plot_title)
         # p0 += theme(axis_text_x=element_text(rotation=45, hjust=1))
-        # p0 += coord_cartesian(ylim=ylim)              
+        # p0 += coord_cartesian(ylim=ylim)
         return p0
 
     def plot_time_series(data, x_column, y_column, fill_column, x_title, y_title, legend_title, plot_title):
@@ -539,7 +579,94 @@ def plot_experiment_12(figure_folder, configs, sample_rate, db):
         p0 += scale_color_discrete()
         return p0
 
+    def plot_replay_matrix(data,maze_folder,pcs_folder):
 
+        # Defines map for labels
+        my_labels = {'sc' : 'Stongest Connection',
+                     'gl' : 'Goal Location',
+                     'sp' : 'Starting Locations',
+                     'pc' : 'Place Cells'}
+
+        # Plots the maze and Place Cells
+        maze_file = os.path.join(maze_folder, data['maze']+'.xml')
+        walls, feeders, start_positions = parse_maze(maze_file)
+        pc_file = os.path.join(pcs_folder, data['pcs']+'.csv')
+        cells = parse_all_cells(pc_file)
+        fig, ax = plt.subplots()
+        x = walls.loc[:, walls.columns[::2]]
+        y = walls.loc[:, walls.columns[1::2]]
+        for i in range(len(walls)):
+            ax.plot(x.iloc[i,:], y.iloc[i,:], color='black', alpha=1.0)
+        x = feeders['x']
+        y = feeders['y']
+        for i in range(len(x)):
+            ax.plot(x,y,'rx', label=my_labels['gl'])
+            my_labels['gl']= '_nolegend_'
+        x = start_positions['x']
+        y = start_positions['y']
+        for i in range(len(x)):
+            ax.plot(x,y,'bo', label=my_labels['sp'])
+            my_labels['sp']= '_nolegend_'
+
+        x = cells['x']
+        y = cells['y']
+        r = cells['r']
+        xy = tuple(zip(x,y))
+        coll = matplotlib.collections.EllipseCollection(r, r,
+                                                        np.zeros_like(r),
+                                                        offsets=xy, units='x',
+                                                        transOffset=ax.transData,
+                                                        color= 'b',
+                                                        alpha= 0)
+        ax.add_collection(coll)
+
+        # Gets Replay Matrix and Ignores Self Connected Place Cells
+        cell_data = data['replay_matrix']
+        np.fill_diagonal(cell_data,0.0)
+
+        # Plots the Replay Matrix
+        nonconnected_cells = []
+        nonconnected_cells_r = []
+
+        # Gets the index and value of max connection for each place cell
+        max_index = np.argmax(cell_data, axis = 1)
+        max_value = np.amax(cell_data,axis = 1)
+
+        # Adds a line connection cells to their max connection
+        for cell_index in range(len(cell_data)):
+            # Plot a connection if it exsists
+            if max_value[cell_index] != 0:
+                # Connected to another Place Cell
+                x=cells.values[cell_index][0]
+                y=cells.values[cell_index][1]
+                dx=cells.values[max_index[cell_index]][0] - x
+                dy=cells.values[max_index[cell_index]][1] - y
+                ax.arrow(x,y,dx,dy,width=.01, length_includes_head = True, label= my_labels['sc'],color = 'b',alpha=.5)
+                my_labels['sc'] = '_nolegend_'
+
+            # Has no connection
+            else:
+                nonconnected_cells.append((cells.values[cell_index][0], cells.values[cell_index][1]))
+                nonconnected_cells_r.append(cells.values[cell_index][2])
+
+
+        # Adds red circles for non connected PCs
+        coll = matplotlib.collections.EllipseCollection(nonconnected_cells_r, nonconnected_cells_r,
+                                                        np.zeros_like(nonconnected_cells_r),
+                                                        offsets=nonconnected_cells, units='x',
+                                                        transOffset=ax.transData,
+                                                        color= 'r',
+                                                        alpha= .5
+                                                        )
+        ax.add_collection(coll)
+
+        # Save Plot
+        lg = plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        name = 'ReplayMatrix: Maze '+ data['maze'] + ', Rat'+ str(data['rat']) + ', Replay Budget' + str(data['replay_budget'])
+        tit = fig.suptitle(name, fontsize=14)
+        ax.set_aspect(1)
+        #plt.show()
+        return fig
     #########################################################################################################################################################
     # LOCALLY UNIFORM EXPERIMENT:
     #########################################################################################################################################################
@@ -549,9 +676,14 @@ def plot_experiment_12(figure_folder, configs, sample_rate, db):
         folder_lu = os.path.join(figure_folder,'replay_with_uniform_layers/')
         folder_lu_runtimes = os.path.join(folder_lu, 'runtimes/')
         folder_lu_learntimes = os.path.join(folder_lu, 'learntimes/')
+        folder_lu_replayMatrix = os.path.join(folder_lu, 'replay_matrix/')
+        folder_lu_replayStats = os.path.join(folder_lu, 'replay_stats/')
         make_folder(folder_lu)
         make_folder(folder_lu_runtimes)
         make_folder(folder_lu_learntimes)
+        make_folder(folder_lu_replayMatrix)
+        make_folder(folder_lu_replayStats)
+
 
 
         # experiment_configs = configs[ configs.mazeFile.str.contains(m + '.xml')].copy()
@@ -572,35 +704,61 @@ def plot_experiment_12(figure_folder, configs, sample_rate, db):
             summaries, runtimes_last_episode = getDataEpisodeAndSummaries(db, experiment_configs, merge_fields, episode, location)
             learning_times = getLearningTimes(db, experiment_configs, location, threshold, merge_fields)
 
+            # GET REPLAY Matrix
+            merge_fields = ['maze', 'replay_budget', 'pcs']
+            replay_summaries = getReplayData(db, experiment_configs, merge_fields, episode, location)
+
             # Redefines replay_budget as catigorical for plotting purposes
-            summaries['replay_budget_c'] = summaries['replay_budget'].astype(CategoricalDtype(summaries['replay_budget'].unique(), ordered=True))
-            learning_times['replay_budget_c'] = learning_times['replay_budget'].astype(CategoricalDtype(learning_times['replay_budget'].unique(), ordered=True))
+            addCatigoricalData(summaries,'replay_budget')
+            addCatigoricalData(runtimes_last_episode,'replay_budget')
+            addCatigoricalData(replay_summaries,'replay_budget')
+            addCatigoricalData(learning_times,'replay_budget')
+
+            # # Redefines replay_budget as catigorical for plotting purposes
+            # summaries['replay_budget_c'] = summaries['replay_budget'].astype(CategoricalDtype(summaries['replay_budget'].unique(), ordered=True))
+            # learning_times['replay_budget_c'] = learning_times['replay_budget'].astype(CategoricalDtype(learning_times['replay_budget'].unique(), ordered=True))
 
             save_name = folder_lu_learntimes + f'learntimes-{m}.pdf'
-            learn_time_plot = plot_box_plot(learning_times, 'replay_budget_c', 'episode', 'Replay Budget', 'Episodes Optimal', "Learn Time Maze: "+ str(m) )
+            learn_time_plot = plot_box_plot(learning_times, 'replay_budget_c', 'episode', 'Replay Budget', 'Episodes Optimal', "Learn Time Maze: "+ str(m), [0, 200], 'black' )
+            ggsave(learn_time_plot, save_name, dpi=300, verbose = False)
+
+            save_name = folder_lu_learntimes + f'optimalityRatio-{m}.pdf'
+            learn_time_plot = plot_box_plot(runtimes_last_episode, 'replay_budget_c', 'steps', 'Replay Budget', 'Optimality Ratio', 'Optimality Ratio '+ str(m) ,[0, 200], 'black')
             ggsave(learn_time_plot, save_name, dpi=300, verbose = False)
             
             save_name = folder_lu_runtimes + f'runtimes-{m}.pdf'
             runtime_plot= plot_time_series(summaries, 'episode', 'steps', 'replay_budget_c', 'Episodes', 'Steps', 'Replay Budget', "Run Time Maze: " + str(m) )
             ggsave(runtime_plot, save_name, dpi=300, verbose = False)
-        # # Plots runtimes for each rat on each maze (all replay budgets superimposed)
-        # # TODO: consider making subplots for each replay budget as well
-        # plot_replay_budget_scatter( folder_lu_runtimes,
-        #                             db,configs,
-        #                             merge_fields,
-        #                             sample_rate,
-        #                             location, 
-        #                             mazes,replay_budgets)
 
-        # # Plots the boxplot of each rats runtimes given the ammount of replay_budget (for each map)
-        # plot_replay_budget_boxplot( folder_lu,
-        #                             db,
-        #                             configs,
-        #                             merge_fields,
-        #                             sample_rate,
-        #                             location, 
-        #                             mazes,
-        #                             replay_budgets)
+            # Remove data with Replay Budget 0
+            replay_summaries = replay_summaries[replay_summaries['replay_budget_c']!=0]
+
+            save_name = folder_lu_replayStats + f'ReplayAverage-{m}.pdf'
+            replay_average_plot= plot_box_plot(replay_summaries, 'replay_budget_c', 'mean', 'Replay Budget', 'Average Connection', str(m), [0, 200], 'black')
+            ggsave(replay_average_plot, save_name, dpi=300, verbose = False)
+
+            save_name = folder_lu_replayStats + f'ReplaySTD-{m}.pdf'
+            replay_std_plot= plot_box_plot(replay_summaries, 'replay_budget_c', 'std', 'Replay Budget', 'STD Connection', str(m), [0, 200], 'black')
+            ggsave(replay_std_plot, save_name, dpi=300, verbose = False)
+
+            save_name = folder_lu_replayStats + f'ReplayTotals-{m}.pdf'
+            replay_total_plot= plot_box_plot(replay_summaries, 'replay_budget_c', 'total_connection', 'Replay Budget', 'Total Connection', str(m), [0, 200], 'black')
+            ggsave(replay_total_plot, save_name, dpi=300, verbose = False)
+
+
+            rat_sample_replay_matrix = replay_summaries[replay_summaries['rat']==1]
+            maze_folder, pcs_folder = getMazeAndPcsFolder()
+            for index, rat in rat_sample_replay_matrix.iterrows():
+                fig = plot_replay_matrix(rat,maze_folder,pcs_folder)
+                save_name = folder_lu_replayMatrix + f"RM_{m}_rat_{rat['rat']}_budget_{rat['replay_budget_c']}.pdf"
+                fig.savefig(save_name,
+                    dpi=300,
+                    format='pdf',
+                    bbox_inches = 'tight')
+                plt.close(fig)
+
+
+
                 
 
 def format_pc_file(file_name):
@@ -615,7 +773,7 @@ def plot_experiment(folder):
 
     # load configs and connect to database
     configs = load_config_file(folder)
-    db = sqlite3.connect(folder + 'experiment_results.sqlite')
+    db = sqlite3.connect(folder + 'experiment_results.sqlite', detect_types=sqlite3.PARSE_DECLTYPES)
 
     # create figures folder
     figure_folder = folder + 'figures/'

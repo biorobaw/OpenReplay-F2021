@@ -29,9 +29,11 @@
 	  -->
 	<template id="model" class="$(PROJECT).model.ReplayModel"
 		load_model="false"
-		numActions="$(numActions)" 
+		numActions="$(numActions)"
+	  	robot_max_move_distance="0.08"
 		mazeWidth="2.2"
 		mazeHeight="3.0"
+	  	num_episodes="$(numEpisodes)"
 		
 		pc_files="$(pc_files)"
 		pcSizes="$(pcSizes)"
@@ -43,12 +45,18 @@
 		numY="$(numY)"
 		v_traces="$(traces)"
 		q_traces="$(traces)"
-    	pc_bin_size="0.04"  
+    	pc_bin_size="0.04"
+	  	threshold_distance="0.1"
 		
-		discountFactor="0.98"
+		discountFactor="0.95"
 		v_learningRate="0.7,0.7,0.7"
 		q_learningRate="0.7,0.7,0.7"
 		foodReward="1.0"
+
+	  	replay_discountFactor="0.95"
+	  	replay_v_learningRate="0.7,0.7,0.7"
+	  	replay_q_learningRate="0.7,0.7,0.7"
+	  	replay_foodReward="1.0"
 
 		wall_bias_method="$(wall_bias_method)"
 		wall_detection_distance="2"
@@ -56,9 +64,14 @@
 		wall_reward="0.1"
 		wall_selection_weights="1, 1, 1, 1, 1, 1"
 		
-		certainty_threshold="$(certainty_threshold)" 
+		certainty_threshold="$(certainty_threshold)"
 
+	  	replay_matrix_update_lr="1"
 		replay_budget="$(replay_budget)"
+	  	max_replay_path="4000"
+	  	connection_threshold="2"
+	  	propagation_type="stochastic"
+	  	starting_replay_location="stochastic"
 
 	/> <!-- discount factor 0.99, learning rate 0.7 -->
 
@@ -69,7 +82,7 @@
 		<module class="$(SCS).robot.modules.FeederModule" 
 				max_feeding_distance="0.1"/><!-- feeding distance is optional, defaults to 0.1m -->	
 		<module class="$(SCS).robot.modules.distance_sensing.SCSWallDistanceSensors"
-			 	num_sensors="$(numActions)"/>  
+			 	num_sensors="$(numActions)"/>
 	</template>
 
 	<groups>

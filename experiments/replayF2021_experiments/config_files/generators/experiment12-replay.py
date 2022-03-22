@@ -13,13 +13,13 @@ experiment     = 'experiments/setups/experiment_1.xml'  # relative to git root f
 
 mazeWidth   = 2.2
 mazeHeight  = 3
-episodesPerStartingLocation = 500
+episodesPerStartingLocation = 3000
 group          = 'g1'
 
 experiment_DF = dataFrame('experiment', experiment)
 group_DF      = dataFrame('group',      group)
 traces_DF     = dataFrame('traces',     [ 0 ])
-replay_budget_DF = dataFrame('replay_budget', [0, 10, 100, 1000])
+replay_budget_DF = dataFrame('replay_budget', [ 0, 100, 1000])
 
 dir_git_root = git.Repo('.', search_parent_directories=True).git.rev_parse("--show-toplevel")
 dir_mazes = 'experiments/mazes/'
@@ -37,7 +37,7 @@ def load_layers(folder):
 layers_uniform_DF          = load_layers(dir_layers_uniform)
 
 # mazes_basic_DF = generateMazeDF(dir_mazes, [ f'M0{m}.xml' for m in [1, 2, 3]])
-mazes_basic_DF = generateMazeDF(dir_mazes_replay, [ f'M{m}00.xml' for m in [1,2]])
+mazes_basic_DF = generateMazeDF(dir_mazes_replay, [ f'M{m}00.xml' for m in [1]])
 mazes_obstacles_DF = generateMazeDF(dir_obstacle_mazes, [ f'M{10*o}{id}.xml' for  o in range(1,7) for id in range(10) ])
 
 init_configs = 0

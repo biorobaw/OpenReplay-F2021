@@ -10,6 +10,7 @@ file = sys.argv[2]
 configs =pd.read_csv(file,sep='\t')
 configFolders = pd.unique(configs['config'])
 mazes = pd.unique(configs['mazeFile'])
+pc_layers = pd.unique(configs['pc_files'])
 experiments = pd.unique(configs['experiment'])
 
 #create function for creating folder paths:
@@ -29,6 +30,7 @@ for folder in  configFolders:
 #create mazes and experiments folder
 makedirs(baseFolder+"/experiments")
 makedirs(baseFolder+"/mazes")
+makedirs(baseFolder+"/pc_layers")
 makedirs(baseFolder+"/slurmOut")
 
 #copy config file, mazes and experiments to base folder
@@ -36,6 +38,8 @@ import shutil
 shutil.copy2(file,baseFolder + '/configs.csv')
 for m in mazes:
     shutil.copy2(m,baseFolder+"/mazes/"+os.path.basename(m))
+for p in pc_layers:
+    shutil.copy2(p,baseFolder+"/pc_layers/"+os.path.basename(p))
 for e in experiments:
     shutil.copy2(e,baseFolder+"/experiments/"+os.path.basename(e))
 #copy maze metrics

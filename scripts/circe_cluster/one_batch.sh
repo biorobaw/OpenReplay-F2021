@@ -9,7 +9,7 @@ echo 'in script'
 configFile=$1
 baseLogFolder=$2
 
-CMD_ARGS="-cp target/Multiscale-F2019-1.0.0-SNAPSHOT-jar-with-dependencies.jar -Xmx1500m com.github.biorobaw.scs.Main"
+CMD_ARGS="-cp OpenReplay-F2021-1.0.0-SNAPSHOT-jar-with-dependencies.jar -Xmx1500m com.github.biorobaw.scs.Main"
 
 module add apps/jdk/15.0.2
 

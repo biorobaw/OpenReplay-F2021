@@ -74,7 +74,7 @@ declare -A E11=( ["NAME"]=experiment11-article2  ["BATCH_SIZE"]=10 ["SAMPLE_RATE
 # E11[MIN_CONFIG]=600
 # E11[MAX_CONFIG]=600
 
-declare -A E12=( ["NAME"]=experiment12-replay  ["BATCH_SIZE"]=10 ["SAMPLE_RATE"]=1  )
+declare -A E12=( ["NAME"]=experiment12-replay  ["BATCH_SIZE"]=100 ["SAMPLE_RATE"]=1  )
 #E12[MIN_RAT]=39
 #E12[MAX_RAT]=39
 
